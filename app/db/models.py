@@ -98,6 +98,13 @@ class TelegramAccount(Base):
         nullable=False
     )
 
+    price: Mapped[int] = mapped_column(
+        Integer,
+        default=30,
+        server_default=text("30"),
+        nullable=False
+    )
+
     def __repr__(self) -> str:
         return (
             f"<TelegramAccount "

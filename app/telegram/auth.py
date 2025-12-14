@@ -21,7 +21,7 @@ async def send_code(phone: str):
     client = await create_client()
     response = await client.send_code_request(phone)
 
-    await redis.set(f"phone{phone}", response.phone_code_hash, ex=120)
+    await redis.set(f"phone{phone}", response.phone_code_hash, ex=300)
     await store.set(phone, client, 300)
 
 async def verify_code(phone: str, code: str, password: str | None = None):
