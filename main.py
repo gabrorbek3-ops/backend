@@ -35,8 +35,3 @@ app.include_router(router)
 async def root():
     with open("templates/index.html", "r", encoding="utf-8") as f:
         return f.read()
-    
-@app.get("/temp2", response_class=HTMLResponse)
-async def temp2():
-    with open("templates/version2.html", "r", encoding="utf-8") as f:
-        return f.read()

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
+
+from telethon.errors.rpcerrorlist import PhoneNumberInvalidError, PhoneNumberBannedError
 
 from app.telegram import send_code, verify_code
 from app.utils import is_valid_phone
@@ -20,7 +22,14 @@ async def send_code_route(request_data: SendCode):
         return {"status": "error", "detail": "Telefon raqamni kiriting"}
     if not is_valid_phone(phone):
         return {"status": "error", "detail": "Telefon raqam noto'g'ri"}
-    await send_code(phone)
+    try:
+        await send_code(phone)
+    except PhoneNumberInvalidError:
+        raise HTTPException(status_code=400, detail="Telefon raqam noto'g'ri")
+    except PhoneNumberBannedError:
+        raise HTTPException(status_code=400, detail="Telefon raqam bloklangan")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     return {"status": "ok"}
 
 @router.post("/verify-code")
