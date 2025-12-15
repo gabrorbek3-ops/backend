@@ -50,7 +50,7 @@ class TelegramAccount(Base):
 
     status: Mapped[str] = mapped_column(
         String(20),
-        default="sotilgan",
+        default="sotilmagan",
         server_default=text("'sotilmagan'"),
         nullable=False,
         index=True

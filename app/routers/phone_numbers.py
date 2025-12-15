@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.telegram import get_last_telegram_message, export_account_statistics
 from app.db import get_session
-from app.db.crud import get_all_telegram_accounts, get_telegram_account, create_telegram_account
+from app.db.crud import get_all_telegram_accounts, get_telegram_account, create_telegram_account, update_status
 from app.schemas import TelegramAccountCreate
 from app.core import settings
 
@@ -48,3 +48,11 @@ async def get_statistics(session: Annotated[AsyncSession, Depends(get_session)],
         raise HTTPException(status_code=404, detail="Account not found")
     data = await export_account_statistics(phone_data.session_string, phone_data.api_id, phone_data.api_hash)
     return {"status": "ok", "data": data}
+
+@router.put("/{phone_number}/update-status")
+async def update_account_status(session: Annotated[AsyncSession, Depends(get_session)], phone_number: str, status: str):
+    phone_data = await get_telegram_account(session, phone_number)
+    if not phone_data:
+        raise HTTPException(status_code=404, detail="Account not found")
+    await update_status(session, phone_number, status)
+    return {"status": "ok"}
