@@ -412,7 +412,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-top: 16px;
-  padding: 12px;
+  padding: 8px; /* O'lcham kichraytirildi */
   background: rgba(0,0,0,0.2);
   border-radius: var(--radius);
 }
@@ -421,8 +421,8 @@ button:disabled{opacity:.6;cursor:not-allowed}
   background: var(--card);
   border: 1px solid #22303c;
   color: var(--text);
-  font-size: 24px;
-  padding: 16px;
+  font-size: 20px; /* O'lcham kichraytirildi */
+  padding: 12px; /* O'lcham kichraytirildi */
   border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.2s;
@@ -447,10 +447,10 @@ button:disabled{opacity:.6;cursor:not-allowed}
   pointer-events: none;
 }
 .keypad-btn.backspace {
-  font-size: 20px;
+  font-size: 18px; /* O'lcham kichraytirildi */
 }
 .keypad-btn.plus-btn {
-  font-size: 24px;
+  font-size: 20px; /* O'lcham kichraytirildi */
 }
 
 /* Country Code Styles */
@@ -571,7 +571,7 @@ const CONFIG = {
 
     // 3. Tugmalar Matnlari
     BTN_SHARE_CONTACT: "📞 Telefon raqamni ulashish",
-    BTN_OTHER_METHOD: "Boshqa usul", // <-- Sizning tugmangiz matni
+    BTN_OTHER_METHOD: "Boshqa usul",
     BTN_SEND_CODE: "Kod yuborish",
     BTN_VERIFY: "Tasdiqlash",
     BTN_BACK_TG: "Orqaga", // Manual Step -> Tg Step
@@ -831,10 +831,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     // Tugma matnlarini o'rnatish
     btnShareContact.textContent = CONFIG.BTN_SHARE_CONTACT;
-    btnOtherMethod.textContent = CONFIG.BTN_OTHER_METHOD; // <-- Matn shu yerda o'rnatiladi
+    btnOtherMethod.textContent = CONFIG.BTN_OTHER_METHOD; 
     sendCodeBtn.textContent = CONFIG.BTN_SEND_CODE;
     
-    // Xato tuzatildi: CONFIG.BTN_BACK_TG ishlatildi
     btnBackTg.textContent = CONFIG.BTN_BACK_TG; 
 
     verifyCodeBtn.textContent = CONFIG.BTN_VERIFY;
