@@ -8,6 +8,7 @@ from sqlalchemy import (
     TIMESTAMP,
     text
 )
+from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -37,7 +38,7 @@ class TelegramAccount(Base):
     )
 
     session_string: Mapped[str | None] = mapped_column(
-        Text,
+        LONGTEXT,
         nullable=True,
         doc="Telethon / Pyrogram StringSession"
     )

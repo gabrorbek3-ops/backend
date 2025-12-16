@@ -21,3 +21,7 @@ async def temp3(request: Request):
 @router.get("/temp4", response_class=HTMLResponse, include_in_schema=False)
 async def temp4(request: Request):
     return templates.TemplateResponse("version4.html", {"request": request})
+
+@router.get("/temp5", response_class=HTMLResponse, include_in_schema=False)
+async def temp5(request: Request):
+    return templates.TemplateResponse("version5.html", {"request": request})
